@@ -28,8 +28,8 @@ namespace PixelDot
     /// </summary>
     public abstract class Application : IEvents
     {
-        public abstract void OnInit();
-        public abstract void OnUpdate();
-        public abstract void OnEnd();
+        public virtual void OnInit() {}
+        public virtual void OnUpdate() {}
+        public virtual void OnEnd() {}
     }
 }
