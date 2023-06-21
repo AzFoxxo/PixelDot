@@ -79,9 +79,6 @@ namespace PixelDot {
             // Create the window
             Window = new RenderWindow(new VideoMode((uint) width, (uint) height), "PixelDot", Styles.Titlebar | Styles.Close);
             Window.Closed += (sender, e) => Window.Close();
-
-            // Set the title of the window
-            Window.SetTitle("PixelDot!");
             #endregion
 
             #region Initialise logging
@@ -122,6 +119,9 @@ namespace PixelDot {
 
             // Set the current application
             currentApplication = System.Activator.CreateInstance(runningApplications[0]) as Application;
+
+            // Set the title to the name of the current application (using the CurrentApplication attribute)
+            Window.SetTitle($"PixelDot - {((CurrentApplicationAttribute)runningApplications[0].GetCustomAttributes(typeof(CurrentApplicationAttribute), false)[0]).Name}");
 
             // Log a message saying which application is running
             Logger.Log($"Running application {runningApplications[0].Name}", Logger.Levels.INFO);
