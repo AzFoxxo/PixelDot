@@ -62,7 +62,7 @@ namespace UserCode
         public bool IsOverlapping(Square other) => position.x < other.position.x + other.size.x && position.x + size.x > other.position.x && position.y < other.position.y + other.size.y && position.y + size.y > other.position.y;
     }
 
-    [CurrentApplication("Collision Test", "1.0.0", "Az Foxxo", "2D collision testing", true)]
+    [CurrentApplication("Collision Test", "1.0.0", "Az Foxxo", "2D collision testing", false)]
     public class TwoDimensionalSquareCollision : Application
     {
         // List of all objects in the scene
