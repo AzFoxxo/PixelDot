@@ -33,9 +33,8 @@ namespace PixelDot
         /// <returns></returns>
         public static SFML.Graphics.Color GetColour(byte index) => Colours[index % Colours.Length];
         
-
         // Colour palette is https://lospec.com/palette-list/nes-advanced
-        private static readonly SFML.Graphics.Color[] Colours =
+        public static readonly SFML.Graphics.Color[] Colours =
             {
                 new(0x26, 0x23, 0x2f),
                 new(0x31, 0x40, 0x47),
