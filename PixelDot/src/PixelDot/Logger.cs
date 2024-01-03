@@ -178,10 +178,8 @@ namespace PixelDot
                 }
 
                 // Write the message to the file
-                using (var writer = new StreamWriter(_logPath + _logName, true))
-                {
-                    writer.WriteLine(message);
-                }
+                using var writer = new StreamWriter(_logPath + _logName, true);
+                writer.WriteLine(message);
             }
 
             // Reset the colour
