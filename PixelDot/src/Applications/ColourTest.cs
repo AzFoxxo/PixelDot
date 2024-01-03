@@ -25,7 +25,7 @@ using PixelDot;
 
 namespace UserCode
 {
-    [CurrentApplication("Colour Test", "1.0.0", "Az Foxxo", "Display all the colours", false)]
+    [CurrentApplication("Colour Test", "1.0.0", "Az Foxxo", "Display all the colours", true)]
     public class ColourTest : Application
     {
         public override void OnEnd()

@@ -1,6 +1,5 @@
 /*
  *   Copyright (c) 2023 Az Foxxo (@AzFoxxo on GitHub)
- *   All rights reserved.
 
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
  *   of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +25,7 @@ using PixelDot;
 // Example application for testing PixelDot
 namespace UserCode
 {
-    [CurrentApplication("Test", "1.0.0", "Az Foxxo", "Example application for testing PixelDot", true)]
+    [CurrentApplication("Test", "1.0.0", "Az Foxxo", "Example application for testing PixelDot", false)]
     public class Test : Application
     {
         private bool trigger = false;

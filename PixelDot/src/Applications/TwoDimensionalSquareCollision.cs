@@ -66,12 +66,12 @@ namespace UserCode
     public class TwoDimensionalSquareCollision : Application
     {
         // List of all objects in the scene
-        private Square[] objects = new Square[] {};
+        private Square[] objects = Array.Empty<Square>();
         
         // Init
         public override void OnInit() {
             // Add squares to the objects array
-            objects = new Square[] { new Square(new Points(10, 10), new Points(2, 2), Palette.GetColour(5)), new (new Points(10, 11), new Points(2, 2), Palette.GetColour(6)) };
+            objects = new Square[] { new(new Points(10, 10), new Points(2, 2), Palette.GetColour(5)), new (new Points(10, 11), new Points(2, 2), Palette.GetColour(6)) };
         }
 
         // Tick
