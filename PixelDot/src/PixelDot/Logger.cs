@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2023 Az Foxxo (@AzFoxxo on GitHub)
+ *   Copyright (c) 2024 Az Foxxo (@AzFoxxo on GitHub)
  *   All rights reserved.
 
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -49,7 +49,6 @@ namespace PixelDot
 
         /// <summary> Setup the logger. </summary>
         /// <param name="logToFile"> Log to a file </param>
-        /// <param name="logToConsole"> Log to the console </param>
         /// <param name="logTime"> Include the time in the log </param>
         /// <param name="logPath"> Destination for log files (not file) </param>
         /// <param name="DefaultLevel"> Default log level </param>

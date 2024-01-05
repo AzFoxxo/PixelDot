@@ -38,7 +38,7 @@ namespace PixelDot {
         public static int PixelScale { get; private set;}
 
         // Background colour
-        public static SFML.Graphics.Color BackgroundColor { get; set; } = Palette.GetColour(0);
+        public static Color BackgroundColor { get; set; } = Palette.GetColour(0);
 
         // Screen width and height
         public static int ScreenWidth => (int)Window!.Size.X / PixelScale;
@@ -51,7 +51,8 @@ namespace PixelDot {
             #region Argument Checking
             // Check at least three args are provided
             if (args.Length < 3) {
-                throw new System.Exception("Not enough arguments provided\nUsage: PixelDot.exe <width> <height> <scale>");
+                Console.WriteLine("Not enough arguments provided\nUsage: PixelDot.exe <width> <height> <scale>");
+                return;
             }
 
             // First two args are width and height
@@ -88,7 +89,7 @@ namespace PixelDot {
 
             #region Find all applications with a CurrentApplication attribute
             // Find all classes that inherit from Application
-            var applications = System.AppDomain.CurrentDomain.GetAssemblies()
+            var applications = AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(x => x.GetTypes())
                 .Where(x => typeof(Application).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract)
                 .ToList();
@@ -96,29 +97,29 @@ namespace PixelDot {
             // Find all applications with a CurrentApplication attribute
             var currentApplications = applications.Where(x => x.GetCustomAttributes(typeof(CurrentApplicationAttribute), false).Length > 0).ToList();
 
-            // If there are no applications with a CurrentApplication attribute, throw an exception
+            // If there are no applications with a CurrentApplication attribute, quit
             if (currentApplications.Count == 0) {
-                Logger.Log("No applications with a CurrentApplication attribute found", Logger.Levels.ERROR);
-                throw new System.Exception("No applications with a CurrentApplication attribute found");
+                Logger.LogError("No applications with a CurrentApplication attribute found");
+                return;
             }
 
             // Find all currentApplications which are set to run
             var runningApplications = currentApplications.Where(x => ((CurrentApplicationAttribute)x.GetCustomAttributes(typeof(CurrentApplicationAttribute), false)[0]).Run).ToList();
 
-            // If there are no applications set to run, throw an exception
+            // If there are no applications set to run, quit
             if (runningApplications.Count == 0) {
-                Logger.Log("No applications set to run", Logger.Levels.ERROR);
-                throw new System.Exception("No applications set to run");
+                Logger.LogError("No applications set to run");
+                return;
             }
 
-            // If there are more than one applications set to run, throw an exception
+            // If there are more than one applications set to run, quit
             if (runningApplications.Count > 1) {
-                Logger.Log("More than one application set to run", Logger.Levels.ERROR);
-                throw new System.Exception("More than one application set to run");
+                Logger.LogError("More than one application set to run");
+                return;
             }
 
             // Set the current application
-            currentApplication = System.Activator.CreateInstance(runningApplications[0]) as Application;
+            currentApplication = Activator.CreateInstance(runningApplications[0]) as Application;
 
             // Set the title to the name of the current application (using the CurrentApplication attribute)
             Window.SetTitle($"PixelDot - {((CurrentApplicationAttribute)runningApplications[0].GetCustomAttributes(typeof(CurrentApplicationAttribute), false)[0]).Name}");
@@ -135,7 +136,7 @@ namespace PixelDot {
             // Enter the main loop
             while (Window.IsOpen) {
                 // Current time
-                var time = System.DateTime.Now;
+                var time = DateTime.Now;
 
                 // Process events
                 Window.DispatchEvents();
@@ -155,10 +156,10 @@ namespace PixelDot {
                 Window.Display();
 
                 // Check at least 60ms have passed since last frame
-                var timePassed = System.DateTime.Now - time;
+                var timePassed = DateTime.Now - time;
                 if (timePassed.TotalMilliseconds < 16.666666666666666666666666666667) {
                     // Sleep for the remaining time
-                    System.Threading.Thread.Sleep((int)(16.666666666666666666666666666667 - timePassed.TotalMilliseconds));
+                    Thread.Sleep((int)(16.666666666666666666666666666667 - timePassed.TotalMilliseconds));
                 }
             }
         }
@@ -181,11 +182,13 @@ namespace PixelDot {
         /// <param name="color"> Color of pixel </param>
         /// <param name="width"> Width of pixel </param>
         /// <param name="height"> Height of pixel </param>
-        public static void DrawPixel(int x, int y, SFML.Graphics.Color color, int width=1, int height=1) {
+        public static void DrawPixel(int x, int y, Color color, int width=1, int height=1) {
             // Draw the rectangle
-            var rectangle = new RectangleShape(new Vector2f(width * PixelScale, height * PixelScale));
-            rectangle.Position = new Vector2f(x * PixelScale, y * PixelScale);
-            rectangle.FillColor = color;
+            var rectangle = new RectangleShape(new Vector2f(width * PixelScale, height * PixelScale))
+            {
+                Position = new Vector2f(x * PixelScale, y * PixelScale),
+                FillColor = color
+            };
             Window?.Draw(rectangle);
         }
 
@@ -196,14 +199,14 @@ namespace PixelDot {
         /// <param name="y2"> Y position of second point </param>
         /// <param name="color"> Color of line </param>
         /// <param name="thickness"> Thickness of line </param>
-        public static void DrawLine(int x1, int y1, int x2, int y2, SFML.Graphics.Color color, int thickness=1) {
+        public static void DrawLine(int x1, int y1, int x2, int y2, Color color, int thickness=1) {
             // Use the DrawPixel function to draw the line
             // Note: this is extremely inefficient as each pixel is drawn separately
             var dx = x2 - x1;
             var dy = y2 - y1;
-            var steps = System.Math.Abs(dx) > System.Math.Abs(dy) ? System.Math.Abs(dx) : System.Math.Abs(dy);
-            var xIncrement = (float)dx / (float)steps;
-            var yIncrement = (float)dy / (float)steps;
+            var steps = Math.Abs(dx) > Math.Abs(dy) ? Math.Abs(dx) : Math.Abs(dy);
+            var xIncrement = (float)dx / steps;
+            var yIncrement = (float)dy / steps;
             var x = (float)x1;
             var y = (float)y1;
             for (var i = 0; i <= steps; i++) {
@@ -220,19 +223,19 @@ namespace PixelDot {
         /// <param name="color"> Color of circle </param>
         /// <param name="thickness"> Thickness of circle </param>
         /// <params name="filled"> Whether the circle should be filled </params>
-        public static void DrawCircle(int x, int y, int radius, SFML.Graphics.Color color, int thickness=1, bool filled=false) {
+        public static void DrawCircle(int x, int y, int radius, Color color, int thickness=1, bool filled=false) {
             // Use the DrawPixel function to draw the circle
             // Note: this is extremely inefficient as each pixel is drawn separately
             for (var i = 0; i < 360; i++) {
-                var angle = i * System.Math.PI / 180;
-                var x1 = (int)(x + radius * System.Math.Cos(angle));
-                var y1 = (int)(y + radius * System.Math.Sin(angle));
+                var angle = i * Math.PI / 180;
+                var x1 = (int)(x + radius * Math.Cos(angle));
+                var y1 = (int)(y + radius * Math.Sin(angle));
                 DrawPixel(x1, y1, color, thickness, thickness);
 
                 if (filled) {
                     for (var j = 0; j < radius; j++) {
-                        var x2 = (int)(x + j * System.Math.Cos(angle));
-                        var y2 = (int)(y + j * System.Math.Sin(angle));
+                        var x2 = (int)(x + j * Math.Cos(angle));
+                        var y2 = (int)(y + j * Math.Sin(angle));
                         DrawPixel(x2, y2, color, thickness, thickness);
                     }
                 }
@@ -247,7 +250,7 @@ namespace PixelDot {
         /// <param name="color"> Color of rectangle </param>
         /// <param name="thickness"> Thickness of rectangle </param>
         /// <params name="filled"> Whether the rectangle should be filled </params>
-        public static void DrawRectangle(int x, int y, int width, int height, SFML.Graphics.Color color, int thickness=1, bool filled=false) {
+        public static void DrawRectangle(int x, int y, int width, int height, Color color, int thickness=1, bool filled=false) {
             // Use the DrawPixel function to draw the rectangle
             // Note: this is extremely inefficient as each pixel is drawn separately
             for (var i = 0; i < width; i++) {
