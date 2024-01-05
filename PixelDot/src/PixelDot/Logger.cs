@@ -21,9 +21,6 @@
  *   SOFTWARE.
  */
 
-using System;
-using System.IO;
-
 namespace PixelDot
 {
     public static class Logger

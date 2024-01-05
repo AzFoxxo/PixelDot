@@ -24,7 +24,7 @@
 namespace PixelDot
 {
     /// <summary> All supported colours </summary>
-    public struct Palette
+    public readonly struct Palette
     {
         /// <summary>
         /// Get a colour from the palette (wraps around if index is out of range)

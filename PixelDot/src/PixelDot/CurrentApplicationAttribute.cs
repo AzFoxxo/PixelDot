@@ -26,7 +26,8 @@ namespace PixelDot
     /// <summary>
     /// Attribute for the current application
     /// </summary>
-    public class CurrentApplicationAttribute : System.Attribute
+    [AttributeUsage(AttributeTargets.Class)]
+    public class CurrentApplicationAttribute : Attribute
     {
         public string Name { get; set; }
         public string Version { get; set; }
