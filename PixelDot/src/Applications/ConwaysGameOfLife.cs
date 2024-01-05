@@ -39,7 +39,7 @@ namespace UserCode
             grid = new bool[Core.ScreenWidth, Core.ScreenWidth];
             for (int x = 0; x < Core.ScreenWidth; x++)
             {
-                for (int y = 0; y < Core.ScreenWidth; y++)
+                for (int y = 0; y < Core.ScreenHeight; y++)
                 {
                     grid[x, y] = false;
                 }
@@ -49,8 +49,7 @@ namespace UserCode
             Random random = new();
             for (int i = 0; i < INITIAL_CELLS; i++)
             { 
-                grid[random.Next(0, Core.ScreenWidth), random.Next(0, Core.ScreenWidth)] = true;
-               
+                grid[random.Next(0, Core.ScreenWidth), random.Next(0, Core.ScreenHeight)] = true;
             }
         }
 
@@ -58,7 +57,7 @@ namespace UserCode
         public override void OnUpdate() {
             for (int x = 0; x < Core.ScreenWidth; x++)
             {
-                for (int y = 0; y < Core.ScreenWidth; y++)
+                for (int y = 0; y < Core.ScreenHeight; y++)
                 {
                     // Update the cell
                     UpdateCell(x, y);
