@@ -30,6 +30,9 @@ namespace UserCode
     {
         // Grid
         private bool[,]? grid;
+
+        // Customisable variables
+        private const int INITIAL_CELLS = 250;
         
         // Init
         public override void OnInit() {
@@ -42,9 +45,9 @@ namespace UserCode
                 }
             }
 
-            // Set 1000 cells to be alive
+            // Set cells to be alive randomly
             Random random = new();
-            for (int i = 0; i < 1000; i++)
+            for (int i = 0; i < INITIAL_CELLS; i++)
             { 
                 grid[random.Next(0, Core.ScreenWidth), random.Next(0, Core.ScreenWidth)] = true;
                
