@@ -25,18 +25,21 @@ using PixelDot;
 
 namespace UserCode
 {
-    [CurrentApplication("Conway's Game of Life", "1.0.0", "Az Foxxo", "Implementation of Game of Life", false)]
+    [RunnableAApplication("Conway's Game of Life", "1.0.1", "Az Foxxo", "Implementation of Game of Life")]
     public class ConwaysGameOfLife : Application
     {
         // Grid
         private bool[,]? grid;
 
         // Customisable variables
-        private const int INITIAL_CELLS = 250;
+        private int startingCellCount;
         
         // Init
         public override void OnInit() {
+            startingCellCount = (Core.ScreenWidth * Core.ScreenWidth) / 20; // 5 percent of cells
             grid = new bool[Core.ScreenWidth, Core.ScreenWidth];
+            Logger.LogInfo($"Screen Size {Core.ScreenWidth}x{Core.ScreenWidth}");
+            Logger.LogInfo($"Initial Cell Count: {startingCellCount}");
             for (int x = 0; x < Core.ScreenWidth; x++)
             {
                 for (int y = 0; y < Core.ScreenHeight; y++)
@@ -47,7 +50,7 @@ namespace UserCode
 
             // Set cells to be alive randomly
             Random random = new();
-            for (int i = 0; i < INITIAL_CELLS; i++)
+            for (int i = 0; i < startingCellCount; i++)
             { 
                 grid[random.Next(0, Core.ScreenWidth), random.Next(0, Core.ScreenHeight)] = true;
             }
@@ -64,7 +67,7 @@ namespace UserCode
 
                     // Draw the cell
                     if (grid![x, y])
-                        Core.DrawPixel(x, y, Palette.GetColour(15));
+                        Core.DrawPixel(x, y, Palette.GetColour(23));
                 }
             }
         }

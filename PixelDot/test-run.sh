@@ -1,2 +1,2 @@
 #/usr/bin/env sh
-dotnet run 960 640 8
+dotnet run 960 640 8 ConwaysGameOfLife

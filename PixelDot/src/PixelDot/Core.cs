@@ -50,8 +50,8 @@ namespace PixelDot {
         public static void Main(string[] args) {
             #region Argument Checking
             // Check at least three args are provided
-            if (args.Length < 3) {
-                Console.WriteLine("Not enough arguments provided\nUsage: PixelDot.exe <width> <height> <scale>");
+            if (args.Length < 4) {
+                Console.WriteLine("Not enough arguments provided\nUsage: PixelDot.exe <width> <height> <scale> <application>");
                 return;
             }
 
@@ -95,7 +95,7 @@ namespace PixelDot {
                 .ToList();
 
             // Find all applications with a CurrentApplication attribute
-            var currentApplications = applications.Where(x => x.GetCustomAttributes(typeof(CurrentApplicationAttribute), false).Length > 0).ToList();
+            var currentApplications = applications.Where(x => x.GetCustomAttributes(typeof(RunnableAApplicationAttribute), false).Length > 0).ToList();
 
             // If there are no applications with a CurrentApplication attribute, quit
             if (currentApplications.Count == 0) {
@@ -103,29 +103,35 @@ namespace PixelDot {
                 return;
             }
 
-            // Find all currentApplications which are set to run
-            var runningApplications = currentApplications.Where(x => ((CurrentApplicationAttribute)x.GetCustomAttributes(typeof(CurrentApplicationAttribute), false)[0]).Run).ToList();
+            // Find the application with the name provided as an argument (class name minus namespace)
+            var application = applications.FirstOrDefault(x => x.Name == args[3]);
 
-            // If there are no applications set to run, quit
-            if (runningApplications.Count == 0) {
-                Logger.LogError("No applications set to run");
-                return;
-            }
+            // If application is null, error
+            if (application == null) {
+                Logger.LogError($"Application `{args[3]}` does not match any valid class name");
+                
+                // Log acceptable applications (class name minus namespace, regular name with version and description)
+                Logger.Log("Acceptable applications:", Logger.Levels.INFO);
+                foreach (var currentApplication in currentApplications) {
+                    var className = currentApplication.Name;
+                    var runnableApplicationAttribute = (RunnableAApplicationAttribute)currentApplication.GetCustomAttributes(typeof(RunnableAApplicationAttribute), false)[0];
+                    var name = runnableApplicationAttribute.Name;
+                    var version = runnableApplicationAttribute.Version;
+                    var description = runnableApplicationAttribute.Description;
+                    Logger.Log($"`{className}` - {name} ({version}) - {description}", Logger.Levels.INFO);
+                }
 
-            // If there are more than one applications set to run, quit
-            if (runningApplications.Count > 1) {
-                Logger.LogError("More than one application set to run");
                 return;
             }
 
             // Set the current application
-            currentApplication = Activator.CreateInstance(runningApplications[0]) as Application;
+            currentApplication = Activator.CreateInstance(application) as Application;
 
             // Set the title to the name of the current application (using the CurrentApplication attribute)
-            Window.SetTitle($"PixelDot - {((CurrentApplicationAttribute)runningApplications[0].GetCustomAttributes(typeof(CurrentApplicationAttribute), false)[0]).Name}");
+            Window.SetTitle($"PixelDot - {((RunnableAApplicationAttribute)application.GetCustomAttributes(typeof(RunnableAApplicationAttribute), false)[0]).Name}");
 
             // Log a message saying which application is running
-            Logger.Log($"Running application {runningApplications[0].Name}", Logger.Levels.INFO);
+            Logger.Log($"Running application {application.Name}", Logger.Levels.INFO);
         #endregion
 
         #region Init method for current application

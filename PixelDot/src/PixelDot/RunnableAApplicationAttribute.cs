@@ -27,21 +27,19 @@ namespace PixelDot
     /// Attribute for the current application
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
-    public class CurrentApplicationAttribute : Attribute
+    public class RunnableAApplicationAttribute : Attribute
     {
-        public string Name { get; set; }
-        public string Version { get; set; }
-        public string Author { get; set; }
-        public string Description { get; set; }
-        public bool Run { get; set; } = true;
+        public string Name { get; private set; }
+        public string Version { get; private set; }
+        public string Author { get; private set; }
+        public string Description { get; private set; }
 
-        public CurrentApplicationAttribute(string name, string version, string author, string description, bool run)
+        public RunnableAApplicationAttribute(string name, string version, string author, string description)
         {
             Name = name;
             Version = version;
             Author = author;
             Description = description;
-            Run = run;
         }
     }
 }

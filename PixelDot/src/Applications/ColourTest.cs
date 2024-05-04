@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2023 Az Foxxo (@AzFoxxo on GitHub)
+ *   Copyright (c) 2024 Az Foxxo (@AzFoxxo on GitHub)
  *   All rights reserved.
 
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,7 +25,7 @@ using PixelDot;
 
 namespace UserCode
 {
-    [CurrentApplication("Colour Test", "1.0.0", "Az Foxxo", "Display all the colours", true)]
+    [RunnableAApplication("Colour Test", "1.0.0", "Az Foxxo", "Display all the colours")]
     public class ColourTest : Application
     {
         public override void OnEnd()
