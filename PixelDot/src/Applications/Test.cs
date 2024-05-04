@@ -25,7 +25,7 @@ using PixelDot;
 // Example application for testing PixelDot
 namespace UserCode
 {
-    [RunnableAApplication("Test", "1.0.0", "Az Foxxo", "Example application for testing PixelDot")]
+    [RunnableApplication("Test", "1.0.0", "Az Foxxo", "Example application for testing PixelDot")]
     public class Test : Application
     {
         private bool trigger = false;

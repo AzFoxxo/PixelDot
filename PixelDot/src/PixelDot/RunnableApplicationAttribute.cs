@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2023 Az Foxxo (@AzFoxxo on GitHub)
+ *   Copyright (c) 2024 Az Foxxo (@AzFoxxo on GitHub)
  *   All rights reserved.
 
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,14 +27,14 @@ namespace PixelDot
     /// Attribute for the current application
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
-    public class RunnableAApplicationAttribute : Attribute
+    public class RunnableApplicationAttribute : Attribute
     {
         public string Name { get; private set; }
         public string Version { get; private set; }
         public string Author { get; private set; }
         public string Description { get; private set; }
 
-        public RunnableAApplicationAttribute(string name, string version, string author, string description)
+        public RunnableApplicationAttribute(string name, string version, string author, string description)
         {
             Name = name;
             Version = version;

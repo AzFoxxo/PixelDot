@@ -25,7 +25,7 @@ using PixelDot;
 
 namespace UserCode
 {
-    [RunnableAApplication("Conway's Game of Life", "1.1.0", "Az Foxxo", "Implementation of Game of Life")]
+    [RunnableApplication("Conway's Game of Life", "1.1.0", "Az Foxxo", "Implementation of Game of Life")]
     public class ConwaysGameOfLife : Application
     {
         // Grid

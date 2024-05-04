@@ -95,7 +95,7 @@ namespace PixelDot {
                 .ToList();
 
             // Find all applications with a CurrentApplication attribute
-            var currentApplications = applications.Where(x => x.GetCustomAttributes(typeof(RunnableAApplicationAttribute), false).Length > 0).ToList();
+            var currentApplications = applications.Where(x => x.GetCustomAttributes(typeof(RunnableApplicationAttribute), false).Length > 0).ToList();
 
             // If there are no applications with a CurrentApplication attribute, quit
             if (currentApplications.Count == 0) {
@@ -114,7 +114,7 @@ namespace PixelDot {
                 Logger.Log("Acceptable applications:", Logger.Levels.INFO);
                 foreach (var currentApplication in currentApplications) {
                     var className = currentApplication.Name;
-                    var runnableApplicationAttribute = (RunnableAApplicationAttribute)currentApplication.GetCustomAttributes(typeof(RunnableAApplicationAttribute), false)[0];
+                    var runnableApplicationAttribute = (RunnableApplicationAttribute)currentApplication.GetCustomAttributes(typeof(RunnableApplicationAttribute), false)[0];
                     var name = runnableApplicationAttribute.Name;
                     var version = runnableApplicationAttribute.Version;
                     var description = runnableApplicationAttribute.Description;
@@ -128,7 +128,7 @@ namespace PixelDot {
             currentApplication = Activator.CreateInstance(application) as Application;
 
             // Set the title to the name of the current application (using the CurrentApplication attribute)
-            Window.SetTitle($"PixelDot - {((RunnableAApplicationAttribute)application.GetCustomAttributes(typeof(RunnableAApplicationAttribute), false)[0]).Name}");
+            Window.SetTitle($"PixelDot - {((RunnableApplicationAttribute)application.GetCustomAttributes(typeof(RunnableApplicationAttribute), false)[0]).Name}");
 
             // Log a message saying which application is running
             Logger.Log($"Running application {application.Name}", Logger.Levels.INFO);
