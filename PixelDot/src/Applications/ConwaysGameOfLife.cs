@@ -25,21 +25,29 @@ using PixelDot;
 
 namespace UserCode
 {
-    [RunnableAApplication("Conway's Game of Life", "1.0.1", "Az Foxxo", "Implementation of Game of Life")]
+    [RunnableAApplication("Conway's Game of Life", "1.1.0", "Az Foxxo", "Implementation of Game of Life")]
     public class ConwaysGameOfLife : Application
     {
         // Grid
         private bool[,]? grid;
+        private int[]? gridAsArrayValues;
 
         // Customisable variables
         private int startingCellCount;
         
         // Init
         public override void OnInit() {
+            // Calculate starting cell count based on screen size
             startingCellCount = (Core.ScreenWidth * Core.ScreenWidth) / 20; // 5 percent of cells
+
             grid = new bool[Core.ScreenWidth, Core.ScreenWidth];
+            gridAsArrayValues = new int[Core.ScreenWidth * Core.ScreenWidth];
+
+            // Log
             Logger.LogInfo($"Screen Size {Core.ScreenWidth}x{Core.ScreenWidth}");
             Logger.LogInfo($"Initial Cell Count: {startingCellCount}");
+
+            // Set all to inactive
             for (int x = 0; x < Core.ScreenWidth; x++)
             {
                 for (int y = 0; y < Core.ScreenHeight; y++)
@@ -58,22 +66,34 @@ namespace UserCode
 
         // Tick
         public override void OnUpdate() {
+            var iterationInArray = 0;
             for (int x = 0; x < Core.ScreenWidth; x++)
             {
                 for (int y = 0; y < Core.ScreenHeight; y++)
                 {
                     // Update the cell
-                    UpdateCell(x, y);
+                    gridAsArrayValues![iterationInArray] = UpdateCell(x, y);
 
                     // Draw the cell
-                    if (grid![x, y])
-                        Core.DrawPixel(x, y, Palette.GetColour(23));
+
+                    // Getting a little low
+                    if (gridAsArrayValues![iterationInArray] == 1)
+                        Core.DrawPixel(x, y, Palette.GetColour(43));
+                    // Perfect amount
+                    else if (gridAsArrayValues![iterationInArray] == 2)
+                        Core.DrawPixel(x, y, Palette.GetColour(44));
+                    // Getting a little high
+                    else if (gridAsArrayValues![iterationInArray] == 3)
+                        Core.DrawPixel(x, y, Palette.GetColour(45));
+
+                    // Iterate
+                    iterationInArray++;
                 }
             }
         }
 
         // Update the cell
-        private void UpdateCell(int x, int y)
+        private int UpdateCell(int x, int y)
         {
             var neighbours = 0;
 
@@ -88,7 +108,9 @@ namespace UserCode
             if (x < Core.ScreenWidth - 1 && y < Core.ScreenWidth - 1 && grid![x + 1, y + 1]) neighbours++;
 
             if (neighbours < 2 || neighbours > 3) grid![x, y] = false;
-            else if (neighbours == 3) grid![x, y] = true; 
+            else if (neighbours == 3) grid![x, y] = true;
+
+            return neighbours;
         }
     }
 }
