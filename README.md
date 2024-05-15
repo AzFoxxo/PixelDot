@@ -5,7 +5,7 @@ PixelDot is a simple game framework written in C# utilising SFML.net to provide 
 ## Creating applications
 You create "Applications" which contain a create, update and end method where you can use a variety of methods provided by PixelDot.
 
-To create an application, you must inherit from the `Application` class and use the `RunnableAApplication` attribute.
+To create an application, you must inherit from the `Application` class and use the `RunnableApplication` attribute.
 
 ## Running applications
 After you create the application, you must provide four arguments to the application `window x size`, `window x size`, `pixel scale` and `application class name`.
