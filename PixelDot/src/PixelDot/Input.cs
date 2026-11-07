@@ -31,35 +31,35 @@ namespace PixelDot;
 public enum Keys
 {
     // Gamepad-style abstractions
-    Jump   = Key.Space,
-    Left   = Key.A,
-    Right  = Key.D,
-    Up     = Key.W,
-    Down   = Key.S,
+    Jump = Key.Space,
+    Left = Key.A,
+    Right = Key.D,
+    Up = Key.W,
+    Down = Key.S,
     Escape = Key.Escape,
-    Start  = Key.Enter,
+    Start = Key.Enter,
     Select = Key.Backspace,
-    A      = Key.Z,
-    B      = Key.X,
-    C      = Key.C,
-    D      = Key.V,
-    Menu   = Key.Tab,
+    A = Key.Z,
+    B = Key.X,
+    C = Key.C,
+    D = Key.V,
+    Menu = Key.Tab,
 
     // Raw keyboard keys
-    ArrowLeft  = Key.Left,
+    ArrowLeft = Key.Left,
     ArrowRight = Key.Right,
-    ArrowUp    = Key.Up,
-    ArrowDown  = Key.Down,
-    Space      = Key.Space,
-    Enter      = Key.Enter,
-    Z          = Key.Z,
-    X          = Key.X,
-    Q          = Key.Q,
-    R          = Key.R,
-    M          = Key.M,
-    P          = Key.P,
-    LShift     = Key.LShift,
-    RShift     = Key.RShift,
+    ArrowUp = Key.Up,
+    ArrowDown = Key.Down,
+    Space = Key.Space,
+    Enter = Key.Enter,
+    Z = Key.Z,
+    X = Key.X,
+    Q = Key.Q,
+    R = Key.R,
+    M = Key.M,
+    P = Key.P,
+    LShift = Key.LShift,
+    RShift = Key.RShift,
 }
 
 // Mouse buttons
@@ -91,6 +91,20 @@ public static class Input
     public static bool IsReleased(Keys key) => !SFML.Window.Keyboard.IsKeyPressed((Key)key);
 
     public static bool IsReleased(MouseButtons button) => !SFML.Window.Mouse.IsButtonPressed((SFML.Window.Mouse.Button)button);
+
+    /// <summary>
+    /// Vertical mouse-wheel scroll delta accumulated this frame.
+    /// Positive = scrolled up / away from user, negative = scrolled down / towards user.
+    /// Returns 0 when the wheel was not moved this frame.
+    /// </summary>
+    public static float GetScrollDelta() => Core.ScrollDeltaY;
+
+    /// <summary>
+    /// Horizontal mouse-wheel scroll delta accumulated this frame (trackpad or horizontal wheel).
+    /// Positive = scrolled right, negative = scrolled left.
+    /// Returns 0 when the wheel was not moved this frame.
+    /// </summary>
+    public static float GetHorizontalScrollDelta() => Core.ScrollDeltaX;
 
     public static KeyState GetKeyState(Keys key)
     {
