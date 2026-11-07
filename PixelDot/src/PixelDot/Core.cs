@@ -47,6 +47,12 @@ public static class Core
     public static int ScreenWidth => (int)(Window?.Size.X ?? 0) / PixelScale;
     public static int ScreenHeight => (int)(Window?.Size.Y ?? 0) / PixelScale;
 
+    // Mouse wheel scroll deltas — accumulated per frame, reset at frame start
+    /// <summary>Vertical scroll delta this frame. Positive = scroll up, negative = scroll down.</summary>
+    public static float ScrollDeltaY { get; private set; }
+    /// <summary>Horizontal scroll delta this frame (trackpad / horizontal wheel).</summary>
+    public static float ScrollDeltaX { get; private set; }
+
     // Target frame duration (60 FPS)
     private static readonly TimeSpan targetFrameTime = TimeSpan.FromSeconds(1.0 / 60.0);
 
@@ -100,6 +106,15 @@ public static class Core
         var windowHeight = (uint)(logicalHeight * PixelScale);
         Window = new RenderWindow(new VideoMode(new Vector2u(windowWidth, windowHeight)), "PixelDot", Styles.Titlebar | Styles.Close, State.Windowed, new ContextSettings { AntialiasingLevel = 0 });
         Window.Closed += (_, _) => Window.Close();
+
+        // Accumulate mouse-wheel deltas into the per-frame scroll properties
+        Window.MouseWheelScrolled += (_, e) =>
+        {
+            if (e.Wheel == Mouse.Wheel.Vertical)
+                ScrollDeltaY += e.Delta;
+            else
+                ScrollDeltaX += e.Delta;
+        };
         #endregion
 
         #region Initialise logging
@@ -153,6 +168,10 @@ public static class Core
             while (Window.IsOpen)
             {
                 stopwatch.Restart();
+
+                // Reset per-frame scroll accumulation before collecting new events
+                ScrollDeltaY = 0f;
+                ScrollDeltaX = 0f;
 
                 Window.DispatchEvents();
 
