@@ -24,20 +24,26 @@
 namespace PixelDot;
 
 /// <summary>
-/// Palette class is responsible for managing colour palettes in PixelDot.
+/// Palette layers supported by PixelDot.
+/// </summary>
+public enum PaletteLayer
+{
+    GUI,
+    Background,
+    Foreground,
+    Sprite,
+    FX
+}
+
+/// <summary>
+/// Palette class is responsible for managing colour palettes and palette layers in PixelDot.
 /// </summary>
 public static class Palette
 {
     /// <summary>
-    /// Get a colour from the palette (wraps around if index is out of range)
+    /// Default colour palette is https://lospec.com/palette-list/nes-advanced
     /// </summary>
-    public static Color GetColour(byte index) => Colours[index % Colours.Length];
-
-    // Default colour palette is https://lospec.com/palette-list/nes-advanced
-    /// <summary>
-    /// All supported colours in the palette
-    /// </summary>
-    public static Color[] Colours =
+    public static readonly Color[] DefaultColours =
     [
         new(0x26, 0x23, 0x2f),
         new(0x31, 0x40, 0x47),
@@ -95,13 +101,125 @@ public static class Palette
         new(0xb3, 0xaa, 0xc0)
     ];
 
+    private static readonly Dictionary<PaletteLayer, Color[]> _layers = new()
+    {
+        [PaletteLayer.GUI] = (Color[])DefaultColours.Clone(),
+        [PaletteLayer.Background] = (Color[])DefaultColours.Clone(),
+        [PaletteLayer.Foreground] = (Color[])DefaultColours.Clone(),
+        [PaletteLayer.Sprite] = (Color[])DefaultColours.Clone(),
+        [PaletteLayer.FX] = (Color[])DefaultColours.Clone(),
+    };
+
     /// <summary>
-    /// Load custom colour palette
+    /// Gets or sets the currently active palette layer.
     /// </summary>
-    /// <param name="path">Filepath to pallet</param>
+    public static PaletteLayer ActiveLayer { get; set; } = PaletteLayer.GUI;
+
+    /// <summary>
+    /// Sets the currently active palette layer.
+    /// </summary>
+    /// <param name="layer">Palette layer to set as active</param>
+    public static void SetLayer(PaletteLayer layer) => ActiveLayer = layer;
+
+    /// <summary>
+    /// Gets the currently active palette layer.
+    /// </summary>
+    public static PaletteLayer GetLayer() => ActiveLayer;
+
+    /// <summary>
+    /// All supported colours in the active palette layer.
+    /// </summary>
+    public static Color[] Colours
+    {
+        get => _layers[ActiveLayer];
+        set
+        {
+            if (value is null || value.Length == 0)
+            {
+                throw new ArgumentException("Palette colours cannot be null or empty.", nameof(value));
+            }
+            _layers[ActiveLayer] = value;
+        }
+    }
+
+    /// <summary>
+    /// Gets the array of colours for a specific palette layer.
+    /// </summary>
+    public static Color[] GetColours(PaletteLayer layer) => _layers[layer];
+
+    /// <summary>
+    /// Sets the array of colours for a specific palette layer.
+    /// </summary>
+    public static void SetColours(PaletteLayer layer, Color[] colours)
+    {
+        if (colours is null || colours.Length == 0)
+        {
+            throw new ArgumentException("Palette colours cannot be null or empty.", nameof(colours));
+        }
+        _layers[layer] = colours;
+    }
+
+    /// <summary>
+    /// Get a colour from the active palette layer (wraps around if index is out of range).
+    /// </summary>
+    public static Color GetColour(byte index) => GetColour(index, ActiveLayer);
+
+    /// <summary>
+    /// Get a colour from the specified palette layer (wraps around if index is out of range).
+    /// </summary>
+    public static Color GetColour(byte index, PaletteLayer layer)
+    {
+        var colours = _layers[layer];
+        return colours[index % colours.Length];
+    }
+
+    /// <summary>
+    /// Resets the specified palette layer to the default colour palette.
+    /// </summary>
+    public static void ResetLayer(PaletteLayer layer)
+    {
+        _layers[layer] = (Color[])DefaultColours.Clone();
+    }
+
+    /// <summary>
+    /// Resets all palette layers to the default colour palette.
+    /// </summary>
+    public static void ResetAllLayers()
+    {
+        foreach (var layer in Enum.GetValues<PaletteLayer>())
+        {
+            _layers[layer] = (Color[])DefaultColours.Clone();
+        }
+    }
+
+    /// <summary>
+    /// Load custom colour palette from a file into a specific layer, or the active layer if omitted.
+    /// </summary>
+    /// <param name="path">Filepath to palette</param>
+    /// <param name="layer">Target layer, or null to load into the currently active layer</param>
     /// <exception cref="FileNotFoundException">Raised if the file does not exist</exception>
     /// <exception cref="FormatException">Raised if the file is not in a valid format</exception>
-    public static void LoadFromFile(string path)
+    public static void LoadFromFile(string path, PaletteLayer? layer = null)
+    {
+        var targetLayer = layer ?? ActiveLayer;
+        var loadedColours = ParsePaletteFile(path);
+        _layers[targetLayer] = loadedColours;
+    }
+
+    /// <summary>
+    /// Load custom colour palette from a file into the specified palette layer.
+    /// </summary>
+    /// <param name="layer">Target palette layer</param>
+    /// <param name="path">Filepath to palette</param>
+    public static void LoadLayerFromFile(PaletteLayer layer, string path) =>
+        LoadFromFile(path, layer);
+
+    /// <summary>
+    /// Parses a palette file from disk into a Color array.
+    /// </summary>
+    /// <param name="path">Filepath to palette</param>
+    /// <returns>Array of parsed Colors</returns>
+    public static Color[] ParsePaletteFile(string path)
     {
         if (!File.Exists(path)) throw new FileNotFoundException($"Palette file not found: {path}");
 
@@ -158,6 +276,6 @@ public static class Palette
 
         if (colours.Count == 0) throw new FormatException("Palette file contains no colours.");
 
-        Colours = [.. colours];
+        return [.. colours];
     }
 }
