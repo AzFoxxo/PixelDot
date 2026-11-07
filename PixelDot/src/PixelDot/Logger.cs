@@ -40,7 +40,7 @@ public static class Logger
     private static bool _logTime;
     private static string? _logPath;
     private static string? _logName;
-    private static bool _initialized;
+    private static bool _Initialised;
 
     /// <summary> Setup the logger. </summary>
     /// <param name="logToFile"> Log to a file </param>
@@ -54,7 +54,7 @@ public static class Logger
         _logPath = logPath;
         _defaultLevel = defaultLevel;
         _logName = $"{DateTime.Now:yyyy-MM-dd_HH-mm-ss-fff}.log";
-        _initialized = true;
+        _Initialised = true;
     }
 
     #region Specific Level Log Methods
@@ -70,9 +70,9 @@ public static class Logger
     /// <summary> Log a message to the console and optional log file. </summary>
     public static string Log<T>(T value, Levels level = Levels.DEBUG)
     {
-        if (!_initialized)
+        if (!_Initialised)
         {
-            throw new InvalidOperationException("Logger is not initialized. Please call Logger.Setup() before using the logger.");
+            throw new InvalidOperationException("Logger is not Initialised. Please call Logger.Setup() before using the logger.");
         }
 
         var prefix = level switch

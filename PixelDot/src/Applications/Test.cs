@@ -42,6 +42,10 @@ public class Test : Application
         Text.SetFont("Regular");
         Text.SetSize(10);
         Text.SetColor(Palette.GetColour(5));
+
+        // Load the sample and play the sample at channel 1
+        // var sample = Audio.LoadSample("example_audio");
+        // Audio.Play(1, sample, true);
     }
 
     public override void OnUpdate()

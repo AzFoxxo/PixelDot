@@ -178,6 +178,7 @@ public static class Core
         finally
         {
             currentApplication?.OnEnd();
+            Audio.Dispose();
             Window?.Close();
             Window?.Dispose();
         }

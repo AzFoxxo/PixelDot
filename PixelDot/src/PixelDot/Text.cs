@@ -23,7 +23,7 @@ public static class Text
     private static Font? _font;
     private static readonly Dictionary<string, string> _fontPathCache = new(StringComparer.OrdinalIgnoreCase);
     private static Shader? _thresholdShader;
-    private static bool _shaderInitialized;
+    private static bool _shaderInitialised;
 
     public static int CharacterSize { get; private set; } = 16;
     public static string CurrentText { get; set; } = string.Empty;
@@ -176,16 +176,16 @@ public static class Text
     }
 
     /// <summary>
-    /// Gets or initializes a fragment shader that thresholds font alpha to remove FreeType smoothing/anti-aliasing.
+    /// Gets or Initialises a fragment shader that thresholds font alpha to remove FreeType smoothing/anti-aliasing.
     /// </summary>
     private static Shader? GetThresholdShader()
     {
-        if (_shaderInitialized)
+        if (_shaderInitialised)
         {
             return _thresholdShader;
         }
 
-        _shaderInitialized = true;
+        _shaderInitialised = true;
 
         if (!Shader.IsAvailable)
         {
@@ -209,7 +209,7 @@ public static class Text
         }
         catch (Exception ex)
         {
-            Logger.LogDebug($"Could not initialize anti-aliasing threshold shader: {ex.Message}");
+            Logger.LogDebug($"Could not Initialise anti-aliasing threshold shader: {ex.Message}");
             _thresholdShader = null;
         }
 
