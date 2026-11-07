@@ -137,7 +137,7 @@ public static class Text
         // Disable smoothing on the font so glyph scaling maintains crisp integer-block pixels
         _font.SetSmooth(false);
 
-        using var sfmlText = new SFML.Graphics.Text(text, _font, (uint)CharacterSize)
+        using var sfmlText = new SFML.Graphics.Text(_font, text, (uint)CharacterSize)
         {
             FillColor = color ?? Color,
             Scale = new Vector2f(Core.PixelScale, Core.PixelScale)
@@ -146,14 +146,15 @@ public static class Text
         var bounds = sfmlText.GetLocalBounds();
 
         // Calculate logical position using bounds and specified alignment
+        // SFML 3: FloatRect exposes Position (Vector2f) and Size (Vector2f) instead of Left/Top/Width/Height
         var logicalX = alignment switch
         {
-            Alignment.Right => x - bounds.Left - bounds.Width,
-            Alignment.Centre => x - bounds.Left - (bounds.Width / 2f),
-            _ => x - bounds.Left
+            Alignment.Right  => x - bounds.Position.X - bounds.Size.X,
+            Alignment.Centre => x - bounds.Position.X - (bounds.Size.X / 2f),
+            _                => x - bounds.Position.X
         };
 
-        var logicalY = y - bounds.Top;
+        var logicalY = y - bounds.Position.Y;
 
         // Multiply by PixelScale and round to exact integer screen coordinates (no subpixels)
         var screenX = (int)MathF.Round(logicalX) * Core.PixelScale;
@@ -167,7 +168,7 @@ public static class Text
         var shader = !AntiAliasing ? GetThresholdShader() : null;
         if (shader is not null)
         {
-            Core.Window.Draw(sfmlText, new RenderStates(shader));
+            Core.Window.Draw(sfmlText, new RenderStates { Shader = shader });
         }
         else
         {
@@ -194,15 +195,18 @@ public static class Text
 
         try
         {
-            const string fragmentShader = @"
-                uniform sampler2D texture;
-                void main()
-                {
-                    vec4 pixel = texture2D(texture, gl_TexCoord[0].xy);
-                    if (pixel.a < 0.5)
-                        discard;
-                    gl_FragColor = gl_Color;
-                }";
+            // SFML 3 / GLSL 3.3: explicit in/out varyings; texture() replaces texture2D()
+            const string fragmentShader =
+                "#version 330 core\n" +
+                "uniform sampler2D texture;\n" +
+                "in vec4 vertexColor;\n" +
+                "in vec2 texCoord;\n" +
+                "out vec4 fragColor;\n" +
+                "void main() {\n" +
+                "    vec4 pixel = texture(texture, texCoord);\n" +
+                "    if (pixel.a < 0.5) discard;\n" +
+                "    fragColor = vertexColor;\n" +
+                "}";
 
             _thresholdShader = Shader.FromString(null, null, fragmentShader);
             _thresholdShader.SetUniform("texture", Shader.CurrentTexture);

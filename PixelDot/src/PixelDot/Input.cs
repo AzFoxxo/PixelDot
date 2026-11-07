@@ -30,19 +30,36 @@ namespace PixelDot;
 /// </summary>
 public enum Keys
 {
-    Jump = Key.Space,
-    Left = Key.A,
-    Right = Key.D,
-    Up = Key.W,
-    Down = Key.S,
+    // Gamepad-style abstractions
+    Jump   = Key.Space,
+    Left   = Key.A,
+    Right  = Key.D,
+    Up     = Key.W,
+    Down   = Key.S,
     Escape = Key.Escape,
-    Start = Key.Enter,
+    Start  = Key.Enter,
     Select = Key.Backspace,
-    A = Key.Z,
-    B = Key.X,
-    C = Key.C,
-    D = Key.V,
-    Menu = Key.Tab,
+    A      = Key.Z,
+    B      = Key.X,
+    C      = Key.C,
+    D      = Key.V,
+    Menu   = Key.Tab,
+
+    // Raw keyboard keys
+    ArrowLeft  = Key.Left,
+    ArrowRight = Key.Right,
+    ArrowUp    = Key.Up,
+    ArrowDown  = Key.Down,
+    Space      = Key.Space,
+    Enter      = Key.Enter,
+    Z          = Key.Z,
+    X          = Key.X,
+    Q          = Key.Q,
+    R          = Key.R,
+    M          = Key.M,
+    P          = Key.P,
+    LShift     = Key.LShift,
+    RShift     = Key.RShift,
 }
 
 // Mouse buttons

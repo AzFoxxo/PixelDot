@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2023 Az Foxxo (@AzFoxxo on GitHub)
+ *   Copyright (c) 2026 Az Foxxo (@AzFoxxo on GitHub)
  *   All rights reserved.
 
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,11 +21,11 @@
  *   SOFTWARE.
  */
 
-using SFML.Graphics;
-
 namespace PixelDot;
 
-/// <summary> All supported colours </summary>
+/// <summary>
+/// Palette class is responsible for managing colour palettes in PixelDot.
+/// </summary>
 public static class Palette
 {
     /// <summary>
@@ -33,8 +33,11 @@ public static class Palette
     /// </summary>
     public static Color GetColour(byte index) => Colours[index % Colours.Length];
 
-    // Colour palette is https://lospec.com/palette-list/nes-advanced
-    public static readonly Color[] Colours =
+    // Default colour palette is https://lospec.com/palette-list/nes-advanced
+    /// <summary>
+    /// All supported colours in the palette
+    /// </summary>
+    public static Color[] Colours =
     [
         new(0x26, 0x23, 0x2f),
         new(0x31, 0x40, 0x47),
@@ -91,4 +94,70 @@ public static class Palette
         new(0x88, 0x7e, 0x83),
         new(0xb3, 0xaa, 0xc0)
     ];
+
+    /// <summary>
+    /// Load custom colour palette
+    /// </summary>
+    /// <param name="path">Filepath to pallet</param>
+    /// <exception cref="FileNotFoundException">Raised if the file does not exist</exception>
+    /// <exception cref="FormatException">Raised if the file is not in a valid format</exception>
+    public static void LoadFromFile(string path)
+    {
+        if (!File.Exists(path)) throw new FileNotFoundException($"Palette file not found: {path}");
+
+        var lines = File.ReadAllLines(path);
+        List<Color> colours = [];
+
+        foreach (var line in lines)
+        {
+            string trimmed = line.Trim();
+
+            if (string.IsNullOrWhiteSpace(trimmed) || trimmed.StartsWith("#"))
+            {
+                continue;
+            }
+
+            // Hex format (RRGGBB or #RRGGBB)
+            if (!trimmed.Contains(','))
+            {
+                string hex = trimmed.TrimStart('#');
+
+                if (hex.Length != 6 ||
+                    !uint.TryParse(hex,
+                        System.Globalization.NumberStyles.HexNumber,
+                        null, out uint value))
+                {
+                    throw new FormatException(
+                        $"Invalid hex colour in palette file: {line}");
+                }
+
+                byte r = (byte)((value >> 16) & 0xFF);
+                byte g = (byte)((value >> 8) & 0xFF);
+                byte b = (byte)(value & 0xFF);
+
+                colours.Add(new Color(r, g, b));
+            }
+            // RGB format (R, G, B)
+            else
+            {
+                string[] parts = trimmed.Split(',');
+
+                if (parts.Length != 3)
+                {
+                    throw new FormatException(
+                        $"Invalid colour format in palette file: {line}");
+                }
+
+                byte r = byte.Parse(parts[0].Trim());
+                byte g = byte.Parse(parts[1].Trim());
+                byte b = byte.Parse(parts[2].Trim());
+
+                colours.Add(new Color(r, g, b));
+            }
+        }
+
+        if (colours.Count == 0) throw new FormatException("Palette file contains no colours.");
+
+        Colours = [.. colours];
+    }
 }

@@ -77,11 +77,25 @@ public static class Audio
         try
         {
             var index = channel - 1;
-            var sound = GetOrCreateChannel(index);
 
+            // SFML 3: Sound requires a SoundBuffer at construction; recreate if the buffer changes.
+            var existingSound = _channels[index];
+            if (existingSound is not null && existingSound.SoundBuffer != sample.SoundBuffer)
+            {
+                existingSound.Stop();
+                existingSound.Dispose();
+                _channels[index] = null;
+            }
+
+            if (_channels[index] is null)
+            {
+                _channels[index] = new Sound(sample.SoundBuffer);
+                _channels[index]!.Volume = _channelVolumes[index];
+            }
+
+            var sound = _channels[index]!;
             sound.Stop();
-            sound.SoundBuffer = sample.SoundBuffer;
-            sound.Loop = loop;
+            sound.IsLooping = loop;
             sound.Volume = _channelVolumes[index];
 
             // Retain reference so garbage collector does not prematurely collect buffer
@@ -292,16 +306,6 @@ public static class Audio
         }
     }
 
-    private static Sound GetOrCreateChannel(int index)
-    {
-        if (_channels[index] is null)
-        {
-            _channels[index] = new Sound();
-            _channels[index]!.Volume = _channelVolumes[index];
-        }
-
-        return _channels[index]!;
-    }
 
     private static void SafeLogError(string message)
     {

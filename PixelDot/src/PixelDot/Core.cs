@@ -50,7 +50,7 @@ public static class Core
     // Target frame duration (60 FPS)
     private static readonly TimeSpan targetFrameTime = TimeSpan.FromSeconds(1.0 / 60.0);
 
-    // Batch rendering vertex buffer
+    // Batch rendering vertex buffer — 6 vertices per logical pixel (two triangles, since SFML 3 removed Quads)
     private static Vertex[] vertexBuffer = new Vertex[1024];
     private static int vertexCount;
 
@@ -71,8 +71,8 @@ public static class Core
         PixelScale = Math.Max(1, int.Parse(args[2]));
 
         // Ensure maximum logical dimensions respect the desktop resolution
-        var maxLogicalWidth = (int)VideoMode.DesktopMode.Width / PixelScale;
-        var maxLogicalHeight = (int)VideoMode.DesktopMode.Height / PixelScale;
+        var maxLogicalWidth = (int)VideoMode.DesktopMode.Size.X / PixelScale;
+        var maxLogicalHeight = (int)VideoMode.DesktopMode.Size.Y / PixelScale;
 
         // Size restrictions in logical units
         if (logicalWidth < 100)
@@ -98,9 +98,7 @@ public static class Core
         // Scale window dimensions by PixelScale and explicitly disable anti-aliasing
         var windowWidth = (uint)(logicalWidth * PixelScale);
         var windowHeight = (uint)(logicalHeight * PixelScale);
-        var contextSettings = new ContextSettings { AntialiasingLevel = 0 };
-
-        Window = new RenderWindow(new VideoMode(windowWidth, windowHeight), "PixelDot", Styles.Titlebar | Styles.Close, contextSettings);
+        Window = new RenderWindow(new VideoMode(new Vector2u(windowWidth, windowHeight)), "PixelDot", Styles.Titlebar | Styles.Close, State.Windowed, new ContextSettings { AntialiasingLevel = 0 });
         Window.Closed += (_, _) => Window.Close();
         #endregion
 
@@ -190,7 +188,7 @@ public static class Core
     {
         if (vertexCount > 0 && Window is not null)
         {
-            Window.Draw(vertexBuffer, 0, (uint)vertexCount, PrimitiveType.Quads);
+            Window.Draw(vertexBuffer, 0, (uint)vertexCount, PrimitiveType.Triangles);
             vertexCount = 0;
         }
     }
@@ -208,9 +206,9 @@ public static class Core
             return;
         }
 
-        if (vertexCount + 4 > vertexBuffer.Length)
+        if (vertexCount + 6 > vertexBuffer.Length)
         {
-            Array.Resize(ref vertexBuffer, Math.Max(vertexBuffer.Length * 2, vertexCount + 4));
+            Array.Resize(ref vertexBuffer, Math.Max(vertexBuffer.Length * 2, vertexCount + 6));
         }
 
         var px = x * PixelScale;
@@ -218,10 +216,19 @@ public static class Core
         var pw = width * PixelScale;
         var ph = height * PixelScale;
 
-        vertexBuffer[vertexCount++] = new Vertex(new Vector2f(px, py), color);
-        vertexBuffer[vertexCount++] = new Vertex(new Vector2f(px + pw, py), color);
-        vertexBuffer[vertexCount++] = new Vertex(new Vector2f(px + pw, py + ph), color);
-        vertexBuffer[vertexCount++] = new Vertex(new Vector2f(px, py + ph), color);
+        // Two triangles (6 vertices) replace the former Quads primitive (4 vertices)
+        var tl = new Vector2f(px, py);
+        var tr = new Vector2f(px + pw, py);
+        var br = new Vector2f(px + pw, py + ph);
+        var bl = new Vector2f(px, py + ph);
+
+        vertexBuffer[vertexCount++] = new Vertex(tl, color);
+        vertexBuffer[vertexCount++] = new Vertex(tr, color);
+        vertexBuffer[vertexCount++] = new Vertex(br, color);
+
+        vertexBuffer[vertexCount++] = new Vertex(br, color);
+        vertexBuffer[vertexCount++] = new Vertex(bl, color);
+        vertexBuffer[vertexCount++] = new Vertex(tl, color);
     }
 
     /// <summary> Draw line on screen </summary>
