@@ -198,18 +198,18 @@ public static class Text
             // SFML 3 / GLSL 3.3: explicit in/out varyings; texture() replaces texture2D()
             const string fragmentShader =
                 "#version 330 core\n" +
-                "uniform sampler2D texture;\n" +
+                "uniform sampler2D sourceTexture;\n" +
                 "in vec4 vertexColor;\n" +
                 "in vec2 texCoord;\n" +
                 "out vec4 fragColor;\n" +
                 "void main() {\n" +
-                "    vec4 pixel = texture(texture, texCoord);\n" +
+                "    vec4 pixel = texture(sourceTexture, texCoord);\n" +
                 "    if (pixel.a < 0.5) discard;\n" +
                 "    fragColor = vertexColor;\n" +
                 "}";
 
             _thresholdShader = Shader.FromString(null, null, fragmentShader);
-            _thresholdShader.SetUniform("texture", Shader.CurrentTexture);
+            _thresholdShader.SetUniform("sourceTexture", Shader.CurrentTexture);
         }
         catch (Exception ex)
         {
