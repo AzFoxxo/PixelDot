@@ -1,0 +1,51 @@
+{
+  "$schema": "https://raw.githubusercontent.com/dotnet/docfx/main/schemas/docfx.schema.json",
+  "metadata": [
+    {
+      "src": [
+        {
+          "files": [
+            "PixelDot/PixelDot.csproj"
+          ],
+          "exclude": [
+            "**/bin/**",
+            "**/obj/**"
+          ]
+        }
+      ],
+      "dest": "docs/api",
+      "filter": "filterConfig.yml"
+    }
+  ],
+  "build": {
+    "content": [
+      {
+        "files": [
+          "docs/api/**/*.yml"
+        ],
+        "exclude": [
+          "docs/api/Applications*.yml",
+          "docs/api/PixelDotCore*.yml"
+        ]
+      },
+      {
+        "files": [
+          "docs/articles/**/*.md"
+        ]
+      },
+      {
+        "files": [
+          "index.md"
+        ]
+      }
+    ],
+    "resource": [
+      {
+        "files": [
+          "Screenshot.png"
+        ]
+      }
+    ],
+    "dest": "_site"
+  }
+}

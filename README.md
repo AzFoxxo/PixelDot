@@ -18,3 +18,7 @@ A simple script to compile and run the application can be found in `test-run.sh`
 - `Input` - Keyboard and mouse input handling for PixelDot.
 - `Core` - Core engine managing the window lifecycle, frame pacing, and batch pixel rendering.
 - `Text` - Render text to the display
+
+## Generate documentation
+
+Run `docfx`.
