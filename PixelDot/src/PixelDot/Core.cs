@@ -1,25 +1,25 @@
 /*
- *   Copyright (c) 2024 Az Foxxo (@AzFoxxo on GitHub)
- *   All rights reserved.
+*   Copyright (c) 2024 Az Foxxo (@AzFoxxo on GitHub)
+*   All rights reserved.
 
- *   Permission is hereby granted, free of charge, to any person obtaining a copy
- *   of this software and associated documentation files (the "Software"), to deal
- *   in the Software without restriction, including without limitation the rights
- *   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *   copies of the Software, and to permit persons to whom the Software is
- *   furnished to do so, subject to the following conditions:
- 
- *   The above copyright notice and this permission notice shall be included in all
- *   copies or substantial portions of the Software.
- 
- *   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- *   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- *   SOFTWARE.
- */
+*   Permission is hereby granted, free of charge, to any person obtaining a copy
+*   of this software and associated documentation files (the "Software"), to deal
+*   in the Software without restriction, including without limitation the rights
+*   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+*   copies of the Software, and to permit persons to whom the Software is
+*   furnished to do so, subject to the following conditions:
+
+*   The above copyright notice and this permission notice shall be included in all
+*   copies or substantial portions of the Software.
+
+*   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+*   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+*   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+*   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+*   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+*   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+*   SOFTWARE.
+*/
 
 using System.Diagnostics;
 using System.Reflection;
@@ -358,5 +358,50 @@ public static class Core
 
         // Right bar (fills height between top and bottom bars)
         DrawPixel(x + width - thickness, y + thickness, color, thickness, height - (thickness * 2));
+    }
+
+    /// <summary>
+    /// Draw triangle on screen
+    /// </summary>
+    /// <param name="x1">Point one X</param>
+    /// <param name="y1">Point one Y</param>
+    /// <param name="x2">Point two X</param>
+    /// <param name="y2">Point two Y</param>
+    /// <param name="x3">Point three X</param>
+    /// <param name="y3">Point three Y</param>
+    /// <param name="color">Color of triangle</param>
+    /// <param name="filled">Whether the triangle should be filled</param>
+    public static void DrawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Color color, bool filled = false)
+    {
+        if (filled)
+        {
+            // Use barycentric coordinates to fill the triangle
+            var minX = Math.Min(x1, Math.Min(x2, x3));
+            var maxX = Math.Max(x1, Math.Max(x2, x3));
+            var minY = Math.Min(y1, Math.Min(y2, y3));
+            var maxY = Math.Max(y1, Math.Max(y2, y3));
+
+            for (var y = minY; y <= maxY; y++)
+            {
+                for (var x = minX; x <= maxX; x++)
+                {
+                    var w0 = ((y2 - y3) * (x - x3) + (x3 - x2) * (y - y3)) / ((y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3));
+                    var w1 = ((y3 - y1) * (x - x3) + (x1 - x3) * (y - y3)) / ((y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3));
+                    var w2 = 1.0f - w0 - w1;
+
+                    if (w0 >= 0 && w1 >= 0 && w2 >= 0)
+                    {
+                        DrawPixel(x, y, color);
+                    }
+                }
+            }
+        }
+        else
+        {
+            // Draw triangle outline using lines
+            DrawLine(x1, y1, x2, y2, color);
+            DrawLine(x2, y2, x3, y3, color);
+            DrawLine(x3, y3, x1, y1, color);
+        }
     }
 }
