@@ -8,12 +8,13 @@ You create "Applications" which contain a create, update and end method where yo
 To create an application, you must inherit from the `Application` class and use the `RunnableApplication` attribute.
 
 ## Running applications
-After you create the application, you must provide four arguments to the application `window x size`, `window x size`, `pixel scale` and `application class name`.
+After you create the application, you must provide four arguments to the application: `window width`, `window height`, `pixel scale` and `application class name`.
 
-A simple script to compile and run the application can be found in `test-run.sh` (Linux/Mac OS X users) and `test-run.bat` (Windows users)
+A simple script to compile and run the application can be found in `test-run.sh` (Linux/Mac OS X users) and `test-run.bat` (Windows users).
 
 ## Provided classes
-- `Palette` (struct) - This provides the predefined colour palette supported by PixelDot
-- `Logger` - This provides functionality to log information to the console for debugging.
-- `Input` - This class provides input support, keyboard and mouse for PixelDot.
-- `Core` - This is a very important class, it contains the core of the framework, provides abstractions over SFML.net for drawing pixels to the screen, etc.
+- `Palette` - Predefined NES-inspired colour palette supported by PixelDot.
+- `Logger` - Functionality to log information to the console and optional log files.
+- `Input` - Keyboard and mouse input handling for PixelDot.
+- `Core` - Core engine managing the window lifecycle, frame pacing, and batch pixel rendering.
+- `Text` - Render text to the display
