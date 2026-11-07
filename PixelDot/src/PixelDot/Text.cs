@@ -149,9 +149,9 @@ public static class Text
         // SFML 3: FloatRect exposes Position (Vector2f) and Size (Vector2f) instead of Left/Top/Width/Height
         var logicalX = alignment switch
         {
-            Alignment.Right  => x - bounds.Position.X - bounds.Size.X,
+            Alignment.Right => x - bounds.Position.X - bounds.Size.X,
             Alignment.Centre => x - bounds.Position.X - (bounds.Size.X / 2f),
-            _                => x - bounds.Position.X
+            _ => x - bounds.Position.X
         };
 
         var logicalY = y - bounds.Position.Y;

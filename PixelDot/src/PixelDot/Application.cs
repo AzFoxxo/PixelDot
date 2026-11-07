@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2023 Az Foxxo (@AzFoxxo on GitHub)
+ *   Copyright (c) 2026 Az Foxxo (@AzFoxxo on GitHub)
  *   All rights reserved.
 
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
