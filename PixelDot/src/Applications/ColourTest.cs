@@ -23,41 +23,36 @@
 
 using PixelDot;
 
-namespace UserCode
+namespace Applications;
+
+[RunnableApplication("Colour Test", "1.0.0", "Az Foxxo", "Display all the colours")]
+public class ColourTest : Application
 {
-    [RunnableApplication("Colour Test", "1.0.0", "Az Foxxo", "Display all the colours")]
-    public class ColourTest : Application
+    public override void OnEnd()
     {
-        public override void OnEnd()
-        {
-            Logger.Log("Game ended");
-        }
+        Logger.Log("Game ended");
+    }
 
-        public override void OnInit()
-        {
-            Logger.Log("Game initialised");
-        }
+    public override void OnInit()
+    {
+        Logger.Log("Game initialised");
+    }
 
-        public override void OnUpdate()
+    public override void OnUpdate()
+    {
+        // Draw all 58 palette colours and then repeat
+        byte offset = 0;
+        for (byte x = 0; x < Core.ScreenWidth; x++)
         {
-            // Draw all 58 palette colours and then repeat
-            byte offset = 0;
-            // Loop over each pixel horizontally
-            for (byte x = 0; x < Core.ScreenWidth; x++)
+            for (byte y = 0; y < Core.ScreenHeight; y++)
             {
-                // Loop over each pixel vertically
-                for (byte y = 0; y < Core.ScreenHeight; y++)
-                {
-                    // Draw a pixel at x, y with the palette color x
-                    Core.DrawPixel(x, y, Palette.GetColour((byte)(x + offset)), 1);
+                Core.DrawPixel(x, y, Palette.GetColour((byte)(x + offset)), 1);
+                offset++;
+            }
 
-                    // Increment the offset
-                    offset++;
-                }
-
-                // If the offset is greater than 58, reset it to 0
-                if (offset > 58)
-                    offset = 0;
+            if (offset > 58)
+            {
+                offset = 0;
             }
         }
     }

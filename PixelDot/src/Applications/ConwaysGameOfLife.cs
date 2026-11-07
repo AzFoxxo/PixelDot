@@ -23,94 +23,90 @@
 
 using PixelDot;
 
-namespace UserCode
+namespace Applications;
+
+[RunnableApplication("Conway's Game of Life", "1.1.0", "Az Foxxo", "Implementation of Game of Life")]
+public class ConwaysGameOfLife : Application
 {
-    [RunnableApplication("Conway's Game of Life", "1.1.0", "Az Foxxo", "Implementation of Game of Life")]
-    public class ConwaysGameOfLife : Application
+    private bool[,]? grid;
+    private int[]? gridAsArrayValues;
+    private int startingCellCount;
+
+    public override void OnInit()
     {
-        // Grid
-        private bool[,]? grid;
-        private int[]? gridAsArrayValues;
+        startingCellCount = (Core.ScreenWidth * Core.ScreenWidth) / 20;
 
-        // Customisable variables
-        private int startingCellCount;
-        
-        // Init
-        public override void OnInit() {
-            // Calculate starting cell count based on screen size
-            startingCellCount = (Core.ScreenWidth * Core.ScreenWidth) / 20; // 5 percent of cells
+        grid = new bool[Core.ScreenWidth, Core.ScreenWidth];
+        gridAsArrayValues = new int[Core.ScreenWidth * Core.ScreenWidth];
 
-            grid = new bool[Core.ScreenWidth, Core.ScreenWidth];
-            gridAsArrayValues = new int[Core.ScreenWidth * Core.ScreenWidth];
+        Logger.LogInfo($"Screen Size {Core.ScreenWidth}x{Core.ScreenWidth}");
+        Logger.LogInfo($"Initial Cell Count: {startingCellCount}");
 
-            // Log
-            Logger.LogInfo($"Screen Size {Core.ScreenWidth}x{Core.ScreenWidth}");
-            Logger.LogInfo($"Initial Cell Count: {startingCellCount}");
-
-            // Set all to inactive
-            for (int x = 0; x < Core.ScreenWidth; x++)
-            {
-                for (int y = 0; y < Core.ScreenHeight; y++)
-                {
-                    grid[x, y] = false;
-                }
-            }
-
-            // Set cells to be alive randomly
-            Random random = new();
-            for (int i = 0; i < startingCellCount; i++)
-            { 
-                grid[random.Next(0, Core.ScreenWidth), random.Next(0, Core.ScreenHeight)] = true;
-            }
-        }
-
-        // Tick
-        public override void OnUpdate() {
-            var iterationInArray = 0;
-            for (int x = 0; x < Core.ScreenWidth; x++)
-            {
-                for (int y = 0; y < Core.ScreenHeight; y++)
-                {
-                    // Update the cell
-                    gridAsArrayValues![iterationInArray] = UpdateCell(x, y);
-
-                    // Draw the cell
-
-                    // Getting a little low
-                    if (gridAsArrayValues![iterationInArray] == 1)
-                        Core.DrawPixel(x, y, Palette.GetColour(43));
-                    // Perfect amount
-                    else if (gridAsArrayValues![iterationInArray] == 2)
-                        Core.DrawPixel(x, y, Palette.GetColour(44));
-                    // Getting a little high
-                    else if (gridAsArrayValues![iterationInArray] == 3)
-                        Core.DrawPixel(x, y, Palette.GetColour(45));
-
-                    // Iterate
-                    iterationInArray++;
-                }
-            }
-        }
-
-        // Update the cell
-        private int UpdateCell(int x, int y)
+        for (var x = 0; x < Core.ScreenWidth; x++)
         {
-            var neighbours = 0;
-
-            // Check all eight directions
-            if (x > 0 && y > 0 && grid![x - 1, y - 1]) neighbours++;
-            if (x > 0 && grid![x - 1, y]) neighbours++;
-            if (x > 0 && y < Core.ScreenWidth - 1 && grid![x - 1, y + 1]) neighbours++;
-            if (y > 0 && grid![x, y - 1]) neighbours++;
-            if (y < Core.ScreenWidth - 1 && grid![x, y + 1]) neighbours++;
-            if (x < Core.ScreenWidth - 1 && y > 0 && grid![x + 1, y - 1]) neighbours++;
-            if (x < Core.ScreenWidth - 1 && grid![x + 1, y]) neighbours++;
-            if (x < Core.ScreenWidth - 1 && y < Core.ScreenWidth - 1 && grid![x + 1, y + 1]) neighbours++;
-
-            if (neighbours < 2 || neighbours > 3) grid![x, y] = false;
-            else if (neighbours == 3) grid![x, y] = true;
-
-            return neighbours;
+            for (var y = 0; y < Core.ScreenHeight; y++)
+            {
+                grid[x, y] = false;
+            }
         }
+
+        var random = new Random();
+        for (var i = 0; i < startingCellCount; i++)
+        {
+            grid[random.Next(0, Core.ScreenWidth), random.Next(0, Core.ScreenHeight)] = true;
+        }
+    }
+
+    public override void OnUpdate()
+    {
+        var iterationInArray = 0;
+        for (var x = 0; x < Core.ScreenWidth; x++)
+        {
+            for (var y = 0; y < Core.ScreenHeight; y++)
+            {
+                var value = UpdateCell(x, y);
+                gridAsArrayValues![iterationInArray] = value;
+
+                if (value == 1)
+                {
+                    Core.DrawPixel(x, y, Palette.GetColour(43));
+                }
+                else if (value == 2)
+                {
+                    Core.DrawPixel(x, y, Palette.GetColour(44));
+                }
+                else if (value == 3)
+                {
+                    Core.DrawPixel(x, y, Palette.GetColour(45));
+                }
+
+                iterationInArray++;
+            }
+        }
+    }
+
+    private int UpdateCell(int x, int y)
+    {
+        var neighbours = 0;
+
+        if (x > 0 && y > 0 && grid![x - 1, y - 1]) neighbours++;
+        if (x > 0 && grid![x - 1, y]) neighbours++;
+        if (x > 0 && y < Core.ScreenWidth - 1 && grid![x - 1, y + 1]) neighbours++;
+        if (y > 0 && grid![x, y - 1]) neighbours++;
+        if (y < Core.ScreenWidth - 1 && grid![x, y + 1]) neighbours++;
+        if (x < Core.ScreenWidth - 1 && y > 0 && grid![x + 1, y - 1]) neighbours++;
+        if (x < Core.ScreenWidth - 1 && grid![x + 1, y]) neighbours++;
+        if (x < Core.ScreenWidth - 1 && y < Core.ScreenWidth - 1 && grid![x + 1, y + 1]) neighbours++;
+
+        if (neighbours is < 2 or > 3)
+        {
+            grid![x, y] = false;
+        }
+        else if (neighbours == 3)
+        {
+            grid![x, y] = true;
+        }
+
+        return neighbours;
     }
 }

@@ -21,15 +21,14 @@
  *   SOFTWARE.
  */
 
-namespace PixelDot
+namespace PixelDot;
+
+/// <summary>
+/// Event interface for PixelDot
+/// </summary>
+public interface IEvents
 {
-    /// <summary>
-    ///    Event interface for PixelDot
-    /// </summary>
-    public interface IEvents
-    {
-        void OnInit();
-        void OnUpdate();
-        void OnEnd();
-    }
+    void OnInit();
+    void OnUpdate();
+    void OnEnd();
 }

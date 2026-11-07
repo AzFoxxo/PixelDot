@@ -23,184 +23,93 @@
 
 using Key = SFML.Window.Keyboard.Key;
 
-namespace PixelDot
+namespace PixelDot;
+
+/// <summary>
+/// Keys supported by PixelDot
+/// </summary>
+public enum Keys
 {
-    /// <summary>
-    ///    Keys supported by PixelDot
-    /// </summary>
+    Jump = Key.Space,
+    Left = Key.A,
+    Right = Key.D,
+    Up = Key.W,
+    Down = Key.S,
+    Escape = Key.Escape,
+    Start = Key.Enter,
+    Select = Key.Backspace,
+    A = Key.Z,
+    B = Key.X,
+    C = Key.C,
+    D = Key.V,
+    Menu = Key.Tab,
+}
 
-    public enum Keys
+// Mouse buttons
+public enum MouseButtons
+{
+    Left = 0,
+    Right = 1,
+    Middle = 2,
+}
+
+/// <summary>
+/// Key struct used to check if a key is pressed, held, or released
+/// </summary>
+public readonly record struct KeyState(bool Pressed, bool Held, bool Released, bool None);
+
+/// <summary>
+/// Input helper class for PixelDot
+/// </summary>
+public static class Input
+{
+    public static bool IsPressed(Keys key) => SFML.Window.Keyboard.IsKeyPressed((Key)key);
+
+    public static bool IsPressed(MouseButtons button) => SFML.Window.Mouse.IsButtonPressed((SFML.Window.Mouse.Button)button);
+
+    public static bool IsHeld(Keys key) => SFML.Window.Keyboard.IsKeyPressed((Key)key);
+
+    public static bool IsHeld(MouseButtons button) => SFML.Window.Mouse.IsButtonPressed((SFML.Window.Mouse.Button)button);
+
+    public static bool IsReleased(Keys key) => !SFML.Window.Keyboard.IsKeyPressed((Key)key);
+
+    public static bool IsReleased(MouseButtons button) => !SFML.Window.Mouse.IsButtonPressed((SFML.Window.Mouse.Button)button);
+
+    public static KeyState GetKeyState(Keys key)
     {
-        Jump = Key.Space,          // Jump
-        Left = Key.A,              // Left
-        Right = Key.D,             // Right
-        Up = Key.W,                // Up
-        Down = Key.S,              // Down
-        Escape = Key.Escape,       // Escape
-        Start = Key.Enter,         // Start
-        Select = Key.Backspace,    // Select
-        A = Key.Z,                 // A
-        B = Key.X,                 // B
-        C = Key.C,                 // C
-        D = Key.V,                 // D
-        Menu = Key.Tab,            // Menu
+        var pressed = IsPressed(key);
+        return new KeyState(pressed, pressed, !pressed, false);
     }
 
-    // Mouse buttons
-    public enum MouseButtons
+    public static KeyState GetKeyState(MouseButtons button)
     {
-        Left = 0,   // Left mouse button
-        Right = 1,  // Right mouse button
-        Middle = 2, // Middle (scroll wheel) mouse button
+        var pressed = IsPressed(button);
+        return new KeyState(pressed, pressed, !pressed, false);
     }
 
     /// <summary>
-    ///    Key struct used to check if a key is pressed, held, or released or none of the above
+    /// Gets the mouse position X relative to the window canvas area.
     /// </summary>
-    public struct KeyState
+    public static int GetMousePositionX(bool factorInPixel = true)
     {
-        public bool Pressed;
-        public bool Held;
-        public bool Released;
-        public bool None;
+        if (Core.Window is null) return 0;
+
+        var viewport = Core.Window.GetViewport(Core.Window.DefaultView);
+        var mousePosX = SFML.Window.Mouse.GetPosition(Core.Window).X - viewport.Left;
+
+        return factorInPixel ? mousePosX / Core.PixelScale : mousePosX;
     }
 
     /// <summary>
-    ///    Keys input class for PixelDot
+    /// Gets the mouse position Y relative to the window canvas area.
     /// </summary>
-    public static class Input
+    public static int GetMousePositionY(bool factorInPixel = true)
     {
-        /// <summary>
-        ///    Checks if a key is pressed
-        /// </summary>
-        /// <param name="key">Key to check</param>
-        /// <returns>True if the key is pressed</returns>
-        public static bool IsPressed(Keys key)
-        {
-            return SFML.Window.Keyboard.IsKeyPressed((Key)key);
-        }
+        if (Core.Window is null) return 0;
 
-        /// <summary>
-        /// Check if a mouse button is pressed
-        /// </summary>
-        /// <param name="button">Mouse button to check</param>
-        /// <returns>True if the mouse button is pressed</returns>
-        public static bool IsPressed(MouseButtons button)
-        {
-            return SFML.Window.Mouse.IsButtonPressed((SFML.Window.Mouse.Button)button);
-        }
+        var viewport = Core.Window.GetViewport(Core.Window.DefaultView);
+        var mousePosY = SFML.Window.Mouse.GetPosition(Core.Window).Y - viewport.Top;
 
-        /// <summary>
-        ///    Checks if a key is held
-        /// </summary>
-        /// <param name="key">Key to check</param>
-        /// <returns>True if the key is held</returns>
-        public static bool IsHeld(Keys key)
-        {
-            return SFML.Window.Keyboard.IsKeyPressed((Key)key);
-        }
-
-        /// <summary>
-        /// Check if a mouse button is held
-        /// </summary>
-        /// <param name="button">Mouse button to check</param>
-        /// <returns>True if the mouse button is held</returns>
-        public static bool IsHeld(MouseButtons button)
-        {
-            return SFML.Window.Mouse.IsButtonPressed((SFML.Window.Mouse.Button)button);
-        }
-
-        /// <summary>
-        ///    Checks if a key is released
-        /// </summary>
-        /// <param name="key">Key to check</param>
-        /// <returns>True if the key is released</returns>
-        public static bool IsReleased(Keys key)
-        {
-            return !SFML.Window.Keyboard.IsKeyPressed((Key)key);
-        }
-
-        /// <summary>
-        /// Check if a mouse button is released
-        /// </summary>
-        /// <param name="button">Mouse button to check</param>
-        /// <returns>True if the mouse button is released</returns>
-        public static bool IsReleased(MouseButtons button)
-        {
-            return !SFML.Window.Mouse.IsButtonPressed((SFML.Window.Mouse.Button)button);
-        }
-
-        /// <summary>
-        ///    Gets the state of a key
-        /// </summary>
-        /// <param name="key">Key to check</param>
-        /// <returns>KeyState of the key</returns>
-        public static KeyState GetKeyState(Keys key)
-        {
-            return new KeyState
-            {
-                Pressed = IsPressed(key),
-                Held = IsHeld(key),
-                Released = IsReleased(key),
-            };
-        }
-
-        /// <summary>
-        ///    Gets the state of a mouse button
-        /// </summary>
-        /// <param name="button">Mouse button to check</param>
-        /// <returns>KeyState of the mouse button</returns>
-        public static KeyState GetKeyState(MouseButtons button)
-        {
-            return new KeyState
-            {
-                Pressed = IsPressed(button),
-                Held = IsHeld(button),
-                Released = IsReleased(button),
-            };
-        }
-
-        /// <summary>
-        /// Gets the mouse position X relative to the window's canvas area.
-        /// </summary>
-        /// <returns>Mouse position X as an integer.</returns>
-        public static int GetMousePositionX(bool factorInPixel = true)
-        {
-            SFML.Graphics.RenderWindow window = Core.Window!;
-
-            // Retrieve the viewport (drawable area) of the window
-            SFML.Graphics.IntRect viewport = window.GetViewport(window.DefaultView);
-
-            int mousePosX = SFML.Window.Mouse.GetPosition(window).X - viewport.Left;
-
-            if (factorInPixel)
-            {
-                mousePosX /= (int)Core.PixelScale;
-            }
-
-            return mousePosX;
-        }
-
-        /// <summary>
-        /// Gets the mouse position Y relative to the window's canvas area.
-        /// </summary>
-        /// <returns>Mouse position Y as an integer.</returns>
-        public static int GetMousePositionY(bool factorInPixel = true)
-        {
-            SFML.Graphics.RenderWindow window = Core.Window!;
-
-            // Retrieve the viewport (drawable area) of the window
-            SFML.Graphics.IntRect viewport = window.GetViewport(window.DefaultView);
-
-            int mousePosY = SFML.Window.Mouse.GetPosition(window).Y - viewport.Top;
-
-            if (factorInPixel)
-            {
-                mousePosY /= (int)Core.PixelScale;
-            }
-
-            return mousePosY;
-        }
-
+        return factorInPixel ? mousePosY / Core.PixelScale : mousePosY;
     }
 }

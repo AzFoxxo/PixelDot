@@ -21,25 +21,16 @@
  *   SOFTWARE.
  */
 
-namespace PixelDot
-{
-    /// <summary>
-    /// Attribute for the current application
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Class)]
-    public class RunnableApplicationAttribute : Attribute
-    {
-        public string Name { get; private set; }
-        public string Version { get; private set; }
-        public string Author { get; private set; }
-        public string Description { get; private set; }
+namespace PixelDot;
 
-        public RunnableApplicationAttribute(string name, string version, string author, string description)
-        {
-            Name = name;
-            Version = version;
-            Author = author;
-            Description = description;
-        }
-    }
+/// <summary>
+/// Attribute for identifying runnable PixelDot applications
+/// </summary>
+[AttributeUsage(AttributeTargets.Class)]
+public class RunnableApplicationAttribute(string name, string version, string author, string description) : Attribute
+{
+    public string Name { get; } = name;
+    public string Version { get; } = version;
+    public string Author { get; } = author;
+    public string Description { get; } = description;
 }

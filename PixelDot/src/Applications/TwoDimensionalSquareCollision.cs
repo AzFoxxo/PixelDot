@@ -22,67 +22,46 @@
  */
 
 using PixelDot;
-using System.Collections.Generic;
-using System.Collections;
 
-namespace UserCode
+namespace Applications;
+
+// Coordinates
+public readonly record struct Points(float x, float y);
+
+// Square representation
+public readonly record struct Square(Points position, Points size, SFML.Graphics.Color colour)
 {
-    // Co-ordinates
-    public struct Points
-    {
-        public float x { get; set; }
-        public float y { get; set; }
+    /// <summary>
+    /// Return if the square is overlapping another square
+    /// </summary>
+    public bool IsOverlapping(Square other) =>
+        position.x < other.position.x + other.size.x &&
+        position.x + size.x > other.position.x &&
+        position.y < other.position.y + other.size.y &&
+        position.y + size.y > other.position.y;
+}
 
-        public Points(float x, float y)
-        {
-            this.x = x;
-            this.y = y;
-        }
+[RunnableApplication("Collision Test", "1.0.0", "Az Foxxo", "2D collision testing")]
+public class TwoDimensionalSquareCollision : Application
+{
+    private Square[] objects = [];
+
+    public override void OnInit()
+    {
+        objects =
+        [
+            new(new Points(10, 10), new Points(2, 2), Palette.GetColour(5)),
+            new(new Points(10, 11), new Points(2, 2), Palette.GetColour(6))
+        ];
     }
 
-    // Square representation
-    public struct Square
+    public override void OnUpdate()
     {
-        public Points position {get; set; }
-        public Points size {get; set; }
-        public SFML.Graphics.Color colour {get; set; }
-
-        public Square(Points position, Points Size, SFML.Graphics.Color colour)
+        foreach (var obj in objects)
         {
-            this.position = position;
-            this.size = Size;
-            this.colour = colour;
+            Core.DrawPixel((int)obj.position.x, (int)obj.position.y, obj.colour, (int)obj.size.x, (int)obj.size.y);
         }
 
-        /// <summary>
-        /// Return if the square is overlapping another square
-        /// </summary>
-        /// <param name="other">The other square to check for overlapping</param>
-        /// <returns>Returns true if overlapping</returns>
-        public bool IsOverlapping(Square other) => position.x < other.position.x + other.size.x && position.x + size.x > other.position.x && position.y < other.position.y + other.size.y && position.y + size.y > other.position.y;
-    }
-
-    [RunnableApplication("Collision Test", "1.0.0", "Az Foxxo", "2D collision testing")]
-    public class TwoDimensionalSquareCollision : Application
-    {
-        // List of all objects in the scene
-        private Square[] objects = Array.Empty<Square>();
-        
-        // Init
-        public override void OnInit() {
-            // Add squares to the objects array
-            objects = new Square[] { new(new Points(10, 10), new Points(2, 2), Palette.GetColour(5)), new (new Points(10, 11), new Points(2, 2), Palette.GetColour(6)) };
-        }
-
-        // Tick
-        public override void OnUpdate() {
-            // Draw all objects
-            foreach (var obj in objects)
-                Core.DrawPixel((int)obj.position.x, (int)obj.position.y, obj.colour, (int)obj.size.x, (int)obj.size.y);
-            
-
-            // Log overlap
-            Logger.Log($"Overlapping: {objects[0].IsOverlapping(objects[1])}");
-        }
+        Logger.Log($"Overlapping: {objects[0].IsOverlapping(objects[1])}");
     }
 }

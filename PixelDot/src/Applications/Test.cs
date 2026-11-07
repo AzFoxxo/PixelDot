@@ -22,66 +22,71 @@
 
 using PixelDot;
 
-// Example application for testing PixelDot
-namespace UserCode
+namespace Applications;
+
+[RunnableApplication("Test", "1.0.0", "Az Foxxo", "Example application for testing PixelDot")]
+public class Test : Application
 {
-    [RunnableApplication("Test", "1.0.0", "Az Foxxo", "Example application for testing PixelDot")]
-    public class Test : Application
+    private bool trigger;
+
+    public override void OnEnd()
     {
-        private bool trigger = false;
-        public override void OnEnd()
+        Logger.Log("Game ended");
+    }
+
+    public override void OnInit()
+    {
+        Logger.Log("Game initialised");
+
+        // Set the font
+        Text.SetFont("Regular");
+        Text.SetSize(10);
+        Text.SetColor(Palette.GetColour(5));
+    }
+
+    public override void OnUpdate()
+    {
+        // Draw a circle at half width, half height with a radius of 10 and the palette color 6
+        Core.DrawCircle(Core.ScreenWidth / 2, Core.ScreenHeight / 2, 10, Palette.GetColour(6));
+
+        // Draw a circle at half width, half height with a radius of 5 and the palette color 8 and filled
+        Core.DrawCircle(Core.ScreenWidth / 2, Core.ScreenHeight / 2, 5, Palette.GetColour(8), 1, true);
+
+        // Draw a single pixel at 0, 0 with the palette color 0
+        Core.DrawPixel(0, 0, Palette.GetColour(0));
+
+        // Draw a single line from 0, 0 to ScreenWidth, ScreenHeight
+        Core.DrawLine(0, 0, Core.ScreenWidth, Core.ScreenHeight, Palette.GetColour(5), 1);
+
+        // Test text rendering
+        Text.Draw(10, 10, "Hello, World!");
+
+        // Log mouse position to console (x, y)
+        Logger.Log($"Mouse position: {Input.GetMousePositionX()}, {Input.GetMousePositionY()}");
+
+        if (Input.IsPressed(MouseButtons.Left))
         {
-            Logger.Log("Game ended");
+            trigger = true;
+        }
+        else if (Input.IsReleased(MouseButtons.Left))
+        {
+            trigger = false;
         }
 
-        public override void OnInit()
+        if (trigger)
         {
-            Logger.Log("Game initialised");
-        }
-
-        public override void OnUpdate()
-        {
-            // Draw a circle at half width, half height with a radius of 10 and the palette color 6
-            Core.DrawCircle(Core.ScreenWidth / 2, Core.ScreenHeight / 2, 10, Palette.GetColour(6));
-
-            // Draw a circle at half width, half height with a radius of 5 and the palette color 8 and filled
-            Core.DrawCircle(Core.ScreenWidth / 2, Core.ScreenHeight / 2, 5, Palette.GetColour(8), 1, true);
-
-            // Draw a single pixel at 0, 0 with the palette color 0
-            Core.DrawPixel(0, 0, Palette.GetColour(0));
-
-            // Draw a single line from 0, 0 to ScreenWidth, ScreenHeight
-            Core.DrawLine(0, 0, Core.ScreenWidth, Core.ScreenHeight, Palette.GetColour(5), 1);
-
-            // Log mouse position to console (x, y)
-            Logger.Log($"Mouse position: {Input.GetMousePositionX()}, {Input.GetMousePositionY()}");
-
-            // If pressed A, set AAAA to true
-            if (Input.IsPressed(MouseButtons.Left))
-                trigger = true;
-            else if (Input.IsReleased(MouseButtons.Left))
-                trigger = false;
-
-            if (trigger)
+            byte offset = 0;
+            for (byte x = 0; x < Core.ScreenWidth; x++)
             {
-                // Draw all 58 palette colours and then repeat
-                byte offset = 0;
-                // Loop over each pixel horizontally
-                for (byte x = 0; x < Core.ScreenWidth; x++)
+                for (byte y = 0; y < Core.ScreenHeight; y++)
                 {
-                    // Loop over each pixel vertically
-                    for (byte y = 0; y < Core.ScreenHeight; y++)
-                    {
-                        // Draw a pixel at x, y with the palette color x
-                        Core.DrawPixel(x, y, Palette.GetColour((byte)(x + offset)), 1);
+                    Core.DrawPixel(x, y, Palette.GetColour((byte)(x + offset)), 1);
+                    offset++;
+                }
 
-                        // Increment the offset
-                        offset++;
-                    }
-
-                    // If the offset is greater than 58, reset it to 0
-                    if (offset > 58)
-                        offset = 0;
+                if (offset > 58)
+                {
+                    offset = 0;
                 }
             }
         }

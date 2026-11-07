@@ -21,15 +21,14 @@
  *   SOFTWARE.
  */
 
-namespace PixelDot
+namespace PixelDot;
+
+/// <summary>
+/// Base class for PixelDot applications which contains user code
+/// </summary>
+public abstract class Application : IEvents
 {
-    /// <summary>
-    /// Base class for PixelDot applications which contains user code
-    /// </summary>
-    public abstract class Application : IEvents
-    {
-        public virtual void OnInit() {}
-        public virtual void OnUpdate() {}
-        public virtual void OnEnd() {}
-    }
+    public virtual void OnInit() { }
+    public virtual void OnUpdate() { }
+    public virtual void OnEnd() { }
 }

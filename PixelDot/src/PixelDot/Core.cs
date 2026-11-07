@@ -21,260 +21,334 @@
  *   SOFTWARE.
  */
 
-// Imports
+using System.Diagnostics;
+using System.Reflection;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 
-namespace PixelDot {
-    public class Core {
-        // Window
-        public static RenderWindow? Window { get; private set; }
+namespace PixelDot;
 
-        // Currently executing application
-        private static Application? currentApplication;
+public static class Core
+{
+    // Window
+    public static RenderWindow? Window { get; private set; }
 
-        // Pixel scale
-        public static int PixelScale { get; private set;}
+    // Currently executing application
+    private static Application? currentApplication;
 
-        // Background colour
-        public static Color BackgroundColor { get; set; } = Palette.GetColour(0);
+    // Pixel scale
+    public static int PixelScale { get; private set; }
 
-        // Screen width and height
-        public static int ScreenWidth => (int)Window!.Size.X / PixelScale;
-        public static int ScreenHeight => (int)Window!.Size.Y / PixelScale;
+    // Background colour
+    public static Color BackgroundColor { get; set; } = Palette.GetColour(0);
 
-        /// <summary> Main entry point of the application </summary>
-        /// <param name="args"> Arguments passed to the application </param>
-        /// <returns> Nothing </returns>
-        public static void Main(string[] args) {
-            #region Argument Checking
-            // Check at least three args are provided
-            if (args.Length < 4) {
-                Console.WriteLine("Not enough arguments provided\nUsage: PixelDot.exe <width> <height> <scale> <application>");
-                return;
-            }
+    // Screen width and height in logical pixels
+    public static int ScreenWidth => (int)(Window?.Size.X ?? 0) / PixelScale;
+    public static int ScreenHeight => (int)(Window?.Size.Y ?? 0) / PixelScale;
 
-            // First two args are width and height
-            var width = int.Parse(args[0]);
-            var height = int.Parse(args[1]);
+    // Target frame duration (60 FPS)
+    private static readonly TimeSpan targetFrameTime = TimeSpan.FromSeconds(1.0 / 60.0);
 
-            // Third arg is scale
-            PixelScale = int.Parse(args[2]);
-            PixelScale = PixelScale < 1 ? 1 : PixelScale;
+    // Batch rendering vertex buffer
+    private static Vertex[] vertexBuffer = new Vertex[1024];
+    private static int vertexCount;
 
-            // Size restrictions
-            if (width < 100) {
-                width = 100;
-            } else if (width > VideoMode.DesktopMode.Width) {
-                width = (int)VideoMode.DesktopMode.Width;
-            }
-            if (height < 50) {
-                height = 50;
-            } else if (height > VideoMode.DesktopMode.Height) {
-                height = (int)VideoMode.DesktopMode.Height;
-            }
-            #endregion
+    /// <summary> Main entry point of the application </summary>
+    /// <param name="args"> Arguments passed to the application </param>
+    public static void Main(string[] args)
+    {
+        #region Argument Checking
+        if (args.Length < 4)
+        {
+            Console.WriteLine("Not enough arguments provided\nUsage: PixelDot <width> <height> <scale> <application>");
+            return;
+        }
 
-            #region Window Creation
-            // Create the window
-            Window = new RenderWindow(new VideoMode((uint) width, (uint) height), "PixelDot", Styles.Titlebar | Styles.Close);
-            Window.Closed += (sender, e) => Window.Close();
-            #endregion
+        var logicalWidth = int.Parse(args[0]);
+        var logicalHeight = int.Parse(args[1]);
 
-            #region Initialise logging
-            // Setup the logger
-            Logger.Setup(true, true, "log/", Logger.Levels.DEBUG);
-            #endregion
+        PixelScale = Math.Max(1, int.Parse(args[2]));
 
-            #region Find all applications with a CurrentApplication attribute
-            // Find all classes that inherit from Application
-            var applications = AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(x => x.GetTypes())
-                .Where(x => typeof(Application).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract)
-                .ToList();
+        // Ensure maximum logical dimensions respect the desktop resolution
+        var maxLogicalWidth = (int)VideoMode.DesktopMode.Width / PixelScale;
+        var maxLogicalHeight = (int)VideoMode.DesktopMode.Height / PixelScale;
 
-            // Find all applications with a CurrentApplication attribute
-            var currentApplications = applications.Where(x => x.GetCustomAttributes(typeof(RunnableApplicationAttribute), false).Length > 0).ToList();
+        // Size restrictions in logical units
+        if (logicalWidth < 100)
+        {
+            logicalWidth = 100;
+        }
+        if (logicalWidth > maxLogicalWidth)
+        {
+            logicalWidth = maxLogicalWidth;
+        }
 
-            // If there are no applications with a CurrentApplication attribute, quit
-            if (currentApplications.Count == 0) {
-                Logger.LogError("No applications with a CurrentApplication attribute found");
-                return;
-            }
-
-            // Find the application with the name provided as an argument (class name minus namespace)
-            var application = applications.FirstOrDefault(x => x.Name == args[3]);
-
-            // If application is null, error
-            if (application == null) {
-                Logger.LogError($"Application `{args[3]}` does not match any valid class name");
-                
-                // Log acceptable applications (class name minus namespace, regular name with version and description)
-                Logger.Log("Acceptable applications:", Logger.Levels.INFO);
-                foreach (var currentApplication in currentApplications) {
-                    var className = currentApplication.Name;
-                    var runnableApplicationAttribute = (RunnableApplicationAttribute)currentApplication.GetCustomAttributes(typeof(RunnableApplicationAttribute), false)[0];
-                    var name = runnableApplicationAttribute.Name;
-                    var version = runnableApplicationAttribute.Version;
-                    var description = runnableApplicationAttribute.Description;
-                    Logger.Log($"`{className}` - {name} ({version}) - {description}", Logger.Levels.INFO);
-                }
-
-                return;
-            }
-
-            // Set the current application
-            currentApplication = Activator.CreateInstance(application) as Application;
-
-            // Set the title to the name of the current application (using the CurrentApplication attribute)
-            Window.SetTitle($"PixelDot - {((RunnableApplicationAttribute)application.GetCustomAttributes(typeof(RunnableApplicationAttribute), false)[0]).Name}");
-
-            // Log a message saying which application is running
-            Logger.Log($"Running application {application.Name}", Logger.Levels.INFO);
+        if (logicalHeight < 50)
+        {
+            logicalHeight = 50;
+        }
+        if (logicalHeight > maxLogicalHeight)
+        {
+            logicalHeight = maxLogicalHeight;
+        }
         #endregion
 
-        #region Init method for current application
-        // Call the init method for the current application
-        currentApplication?.OnInit();
+        #region Window Creation
+        // Scale window dimensions by PixelScale and explicitly disable anti-aliasing
+        var windowWidth = (uint)(logicalWidth * PixelScale);
+        var windowHeight = (uint)(logicalHeight * PixelScale);
+        var contextSettings = new ContextSettings { AntialiasingLevel = 0 };
+
+        Window = new RenderWindow(new VideoMode(windowWidth, windowHeight), "PixelDot", Styles.Titlebar | Styles.Close, contextSettings);
+        Window.Closed += (_, _) => Window.Close();
         #endregion
 
-            // Enter the main loop
-            while (Window.IsOpen) {
-                // Current time
-                var time = DateTime.Now;
+        #region Initialise logging
+        Logger.Setup(true, true, "log/", Logger.Levels.DEBUG);
+        #endregion
 
-                // Process events
+        #region Find all applications with a RunnableApplication attribute
+        var applications = AppDomain.CurrentDomain.GetAssemblies()
+            .SelectMany(a => a.GetTypes())
+            .Where(t => typeof(Application).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract)
+            .ToList();
+
+        var runnableApplications = applications
+            .Where(t => t.GetCustomAttribute<RunnableApplicationAttribute>() is not null)
+            .ToList();
+
+        if (runnableApplications.Count == 0)
+        {
+            Logger.LogError("No applications with a RunnableApplication attribute found");
+            return;
+        }
+
+        // Only search runnableApplications (classes with RunnableApplicationAttribute)
+        var targetType = runnableApplications.FirstOrDefault(t => t.Name == args[3]);
+        if (targetType is null)
+        {
+            Logger.LogError($"Application `{args[3]}` does not match any valid class name");
+            Logger.Log("Acceptable applications:", Logger.Levels.INFO);
+
+            foreach (var appType in runnableApplications)
+            {
+                var attr = appType.GetCustomAttribute<RunnableApplicationAttribute>()!;
+                Logger.Log($"`{appType.Name}` - {attr.Name} ({attr.Version}) - {attr.Description}", Logger.Levels.INFO);
+            }
+            return;
+        }
+
+        currentApplication = Activator.CreateInstance(targetType) as Application;
+        var appAttr = targetType.GetCustomAttribute<RunnableApplicationAttribute>();
+        Window.SetTitle($"PixelDot - {appAttr?.Name ?? targetType.Name}");
+        Logger.Log($"Running application {targetType.Name}", Logger.Levels.INFO);
+        #endregion
+
+        #region Run Application Lifecycle
+        try
+        {
+            currentApplication?.OnInit();
+
+            var stopwatch = Stopwatch.StartNew();
+
+            while (Window.IsOpen)
+            {
+                stopwatch.Restart();
+
                 Window.DispatchEvents();
 
-                // Check if the window has been closed
-                if (!Window.IsOpen) {
+                if (!Window.IsOpen)
+                {
                     break;
                 }
 
-                // Clear screen
                 Window.Clear(BackgroundColor);
-
-                // Call the update method for the current application
                 currentApplication?.OnUpdate();
-
-                // Update the display
+                RenderBatch();
                 Window.Display();
 
-                // Check at least 60ms have passed since last frame
-                var timePassed = DateTime.Now - time;
-                if (timePassed.TotalMilliseconds < 16.666666666666666666666666666667) {
-                    // Sleep for the remaining time
-                    Thread.Sleep((int)(16.666666666666666666666666666667 - timePassed.TotalMilliseconds));
+                var elapsed = stopwatch.Elapsed;
+                if (elapsed < targetFrameTime)
+                {
+                    Thread.Sleep(targetFrameTime - elapsed);
                 }
             }
         }
-
-        // Clean-up the application
-        ~Core() {
-            // Call the destroy method for the current application
+        finally
+        {
             currentApplication?.OnEnd();
-
-            // Close the window
             Window?.Close();
-
-            // Dispose of the window
             Window?.Dispose();
         }
+        #endregion
+    }
 
-        /// <summary> Draw pixel on screen </summary>
-        /// <param name="x"> X position of pixel </param>
-        /// <param name="y"> Y position of pixel </param>
-        /// <param name="color"> Color of pixel </param>
-        /// <param name="width"> Width of pixel </param>
-        /// <param name="height"> Height of pixel </param>
-        public static void DrawPixel(int x, int y, Color color, int width=1, int height=1) {
-            // Draw the rectangle
-            var rectangle = new RectangleShape(new Vector2f(width * PixelScale, height * PixelScale))
+    /// <summary> Flushes and draws all batched pixels to the window </summary>
+    public static void RenderBatch()
+    {
+        if (vertexCount > 0 && Window is not null)
+        {
+            Window.Draw(vertexBuffer, 0, (uint)vertexCount, PrimitiveType.Quads);
+            vertexCount = 0;
+        }
+    }
+
+    /// <summary> Draw pixel on screen </summary>
+    /// <param name="x"> X position of pixel </param>
+    /// <param name="y"> Y position of pixel </param>
+    /// <param name="color"> Color of pixel </param>
+    /// <param name="width"> Width of pixel </param>
+    /// <param name="height"> Height of pixel </param>
+    public static void DrawPixel(int x, int y, Color color, int width = 1, int height = 1)
+    {
+        if (width <= 0 || height <= 0)
+        {
+            return;
+        }
+
+        if (vertexCount + 4 > vertexBuffer.Length)
+        {
+            Array.Resize(ref vertexBuffer, Math.Max(vertexBuffer.Length * 2, vertexCount + 4));
+        }
+
+        var px = x * PixelScale;
+        var py = y * PixelScale;
+        var pw = width * PixelScale;
+        var ph = height * PixelScale;
+
+        vertexBuffer[vertexCount++] = new Vertex(new Vector2f(px, py), color);
+        vertexBuffer[vertexCount++] = new Vertex(new Vector2f(px + pw, py), color);
+        vertexBuffer[vertexCount++] = new Vertex(new Vector2f(px + pw, py + ph), color);
+        vertexBuffer[vertexCount++] = new Vertex(new Vector2f(px, py + ph), color);
+    }
+
+    /// <summary> Draw line on screen </summary>
+    /// <param name="x1"> X position of first point </param>
+    /// <param name="y1"> Y position of first point </param>
+    /// <param name="x2"> X position of second point </param>
+    /// <param name="y2"> Y position of second point </param>
+    /// <param name="color"> Color of line </param>
+    /// <param name="thickness"> Thickness of line </param>
+    public static void DrawLine(int x1, int y1, int x2, int y2, Color color, int thickness = 1)
+    {
+        if (thickness <= 0)
+        {
+            return;
+        }
+
+        var dx = x2 - x1;
+        var dy = y2 - y1;
+        var steps = Math.Max(Math.Abs(dx), Math.Abs(dy));
+        if (steps == 0)
+        {
+            DrawPixel(x1, y1, color, thickness, thickness);
+            return;
+        }
+
+        var xIncrement = (float)dx / steps;
+        var yIncrement = (float)dy / steps;
+        var x = (float)x1;
+        var y = (float)y1;
+
+        for (var i = 0; i <= steps; i++)
+        {
+            DrawPixel((int)Math.Round(x), (int)Math.Round(y), color, thickness, thickness);
+            x += xIncrement;
+            y += yIncrement;
+        }
+    }
+
+    /// <summary> Draw circle on screen </summary>
+    /// <param name="x"> X position of center </param>
+    /// <param name="y"> Y position of center </param>
+    /// <param name="radius"> Radius of circle </param>
+    /// <param name="color"> Color of circle </param>
+    /// <param name="thickness"> Thickness of circle </param>
+    /// <param name="filled"> Whether the circle should be filled </param>
+    public static void DrawCircle(int x, int y, int radius, Color color, int thickness = 1, bool filled = false)
+    {
+        if (radius < 0 || thickness <= 0)
+        {
+            return;
+        }
+
+        if (radius == 0)
+        {
+            DrawPixel(x, y, color, 1, 1);
+            return;
+        }
+
+        if (filled || thickness >= radius)
+        {
+            for (var dy = -radius; dy <= radius; dy++)
             {
-                Position = new Vector2f(x * PixelScale, y * PixelScale),
-                FillColor = color
-            };
-            Window?.Draw(rectangle);
+                var dx = (int)Math.Round(Math.Sqrt(radius * radius - dy * dy));
+                DrawPixel(x - dx, y + dy, color, (2 * dx) + 1, 1);
+            }
+            return;
         }
 
-        /// <summary> Draw line on screen </summary>
-        /// <param name="x1"> X position of first point </param>
-        /// <param name="y1"> Y position of first point </param>
-        /// <param name="x2"> X position of second point </param>
-        /// <param name="y2"> Y position of second point </param>
-        /// <param name="color"> Color of line </param>
-        /// <param name="thickness"> Thickness of line </param>
-        public static void DrawLine(int x1, int y1, int x2, int y2, Color color, int thickness=1) {
-            // Use the DrawPixel function to draw the line
-            // Note: this is extremely inefficient as each pixel is drawn separately
-            var dx = x2 - x1;
-            var dy = y2 - y1;
-            var steps = Math.Abs(dx) > Math.Abs(dy) ? Math.Abs(dx) : Math.Abs(dy);
-            var xIncrement = (float)dx / steps;
-            var yIncrement = (float)dy / steps;
-            var x = (float)x1;
-            var y = (float)y1;
-            for (var i = 0; i <= steps; i++) {
-                DrawPixel((int)x, (int)y, color, thickness, thickness);
-                x += xIncrement;
-                y += yIncrement;
+        var innerRadius = radius - thickness;
+        for (var dy = -radius; dy <= radius; dy++)
+        {
+            var dxOuter = (int)Math.Round(Math.Sqrt(radius * radius - dy * dy));
+
+            if (Math.Abs(dy) <= innerRadius)
+            {
+                var dxInner = (int)Math.Round(Math.Sqrt(innerRadius * innerRadius - dy * dy));
+                if (dxInner >= dxOuter)
+                {
+                    dxInner = dxOuter - 1;
+                }
+
+                var segWidth = dxOuter - dxInner;
+                if (segWidth > 0)
+                {
+                    DrawPixel(x - dxOuter, y + dy, color, segWidth, 1);
+                    DrawPixel(x + dxInner + 1, y + dy, color, segWidth, 1);
+                }
+            }
+            else
+            {
+                DrawPixel(x - dxOuter, y + dy, color, (2 * dxOuter) + 1, 1);
             }
         }
+    }
 
-        /// <summary> Draw circle on screen </summary>
-        /// <param name="x"> X position of center </param>
-        /// <param name="y"> Y position of center </param>
-        /// <param name="radius"> Radius of circle </param>
-        /// <param name="color"> Color of circle </param>
-        /// <param name="thickness"> Thickness of circle </param>
-        /// <params name="filled"> Whether the circle should be filled </params>
-        public static void DrawCircle(int x, int y, int radius, Color color, int thickness=1, bool filled=false) {
-            // Use the DrawPixel function to draw the circle
-            // Note: this is extremely inefficient as each pixel is drawn separately
-            for (var i = 0; i < 360; i++) {
-                var angle = i * Math.PI / 180;
-                var x1 = (int)(x + radius * Math.Cos(angle));
-                var y1 = (int)(y + radius * Math.Sin(angle));
-                DrawPixel(x1, y1, color, thickness, thickness);
-
-                if (filled) {
-                    for (var j = 0; j < radius; j++) {
-                        var x2 = (int)(x + j * Math.Cos(angle));
-                        var y2 = (int)(y + j * Math.Sin(angle));
-                        DrawPixel(x2, y2, color, thickness, thickness);
-                    }
-                }
-            }
+    /// <summary> Draw rectangle on screen </summary>
+    /// <param name="x"> X position of top left corner </param>
+    /// <param name="y"> Y position of top left corner </param>
+    /// <param name="width"> Width of rectangle </param>
+    /// <param name="height"> Height of rectangle </param>
+    /// <param name="color"> Color of rectangle </param>
+    /// <param name="thickness"> Thickness of rectangle </param>
+    /// <param name="filled"> Whether the rectangle should be filled </param>
+    public static void DrawRectangle(int x, int y, int width, int height, Color color, int thickness = 1, bool filled = false)
+    {
+        if (width <= 0 || height <= 0 || thickness <= 0)
+        {
+            return;
         }
 
-        /// <summary> Draw rectangle on screen </summary>
-        /// <param name="x"> X position of top left corner </param>
-        /// <param name="y"> Y position of top left corner </param>
-        /// <param name="width"> Width of rectangle </param>
-        /// <param name="height"> Height of rectangle </param>
-        /// <param name="color"> Color of rectangle </param>
-        /// <param name="thickness"> Thickness of rectangle </param>
-        /// <params name="filled"> Whether the rectangle should be filled </params>
-        public static void DrawRectangle(int x, int y, int width, int height, Color color, int thickness=1, bool filled=false) {
-            // Use the DrawPixel function to draw the rectangle
-            // Note: this is extremely inefficient as each pixel is drawn separately
-            for (var i = 0; i < width; i++) {
-                for (var j = 0; j < height; j++) {
-                    DrawPixel(x + i, y + j, color, thickness, thickness);
-                }
-            }
-
-            if (filled) {
-                for (var i = 0; i < width; i++) {
-                    DrawPixel(x + i, y, color, thickness, thickness);
-                    DrawPixel(x + i, y + height, color, thickness, thickness);
-                }
-                for (var i = 0; i < height; i++) {
-                    DrawPixel(x, y + i, color, thickness, thickness);
-                    DrawPixel(x + width, y + i, color, thickness, thickness);
-                }
-            }
+        // When filled or when thickness covers the entire interior, draw one solid block
+        if (filled || thickness * 2 >= width || thickness * 2 >= height)
+        {
+            DrawPixel(x, y, color, width, height);
+            return;
         }
+
+        // Draw outline without duplicate overlapping vertices:
+        // Top bar
+        DrawPixel(x, y, color, width, thickness);
+
+        // Bottom bar
+        DrawPixel(x, y + height - thickness, color, width, thickness);
+
+        // Left bar (fills height between top and bottom bars)
+        DrawPixel(x, y + thickness, color, thickness, height - (thickness * 2));
+
+        // Right bar (fills height between top and bottom bars)
+        DrawPixel(x + width - thickness, y + thickness, color, thickness, height - (thickness * 2));
     }
 }
