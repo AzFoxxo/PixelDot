@@ -22,8 +22,6 @@ public static class Text
 
     private static Font? _font;
     private static readonly Dictionary<string, string> _fontPathCache = new(StringComparer.OrdinalIgnoreCase);
-    private static Shader? _thresholdShader;
-    private static bool _shaderInitialised;
 
     public static int CharacterSize { get; private set; } = 16;
     public static string CurrentText { get; set; } = string.Empty;
@@ -33,7 +31,11 @@ public static class Text
     /// <summary>
     /// Enables or disables anti-aliasing for text rendering (default is false for retro pixel art look).
     /// </summary>
-    public static void SetAntiAliasing(bool enabled) => AntiAliasing = enabled;
+    public static void SetAntiAliasing(bool enabled)
+    {
+        AntiAliasing = enabled;
+        _font?.SetSmooth(enabled);
+    }
 
     /// <summary>
     /// Sets the active font from a file path or a system-installed font name (e.g. "Arial", "DejaVu Sans", "LiberationMono").
@@ -52,7 +54,7 @@ public static class Text
         {
             _font?.Dispose();
             _font = new Font(resolvedPath);
-            _font.SetSmooth(false);
+            _font.SetSmooth(AntiAliasing);
             Logger.LogInfo($"Loaded font: {Path.GetFileName(resolvedPath)}");
         }
         catch (Exception ex)
@@ -68,7 +70,7 @@ public static class Text
     public static void SetSize(int size)
     {
         CharacterSize = Math.Max(1, size);
-        _font?.SetSmooth(false);
+        _font?.SetSmooth(AntiAliasing);
     }
 
     /// <summary>
@@ -145,79 +147,32 @@ public static class Text
 
         var bounds = sfmlText.GetLocalBounds();
 
-        // Calculate logical position using bounds and specified alignment
-        // SFML 3: FloatRect exposes Position (Vector2f) and Size (Vector2f) instead of Left/Top/Width/Height
-        var logicalX = alignment switch
+        // Position the text so its visible top-left aligns with (x, y) in logical pixels.
+        //
+        // SFML renders text starting at sfmlText.Position (in screen/world pixels).
+        // GetLocalBounds().Position is the glyph-bearing offset in LOCAL (pre-scale) units.
+        // With Scale=(PixelScale, PixelScale) the bearing becomes bounds.Position * PixelScale
+        // in screen pixels. We counteract it by baking the offset into Origin so we can
+        // simply set Position = (x * PixelScale, y * PixelScale).
+        sfmlText.Origin = new Vector2f(bounds.Position.X, bounds.Position.Y);
+
+        var alignment_offset = alignment switch
         {
-            Alignment.Right => x - bounds.Position.X - bounds.Size.X,
-            Alignment.Centre => x - bounds.Position.X - (bounds.Size.X / 2f),
-            _ => x - bounds.Position.X
+            Alignment.Right  => bounds.Size.X,
+            Alignment.Centre => bounds.Size.X / 2f,
+            _                => 0f,
         };
+        sfmlText.Origin = new Vector2f(bounds.Position.X + alignment_offset, bounds.Position.Y);
 
-        var logicalY = y - bounds.Position.Y;
-
-        // Multiply by PixelScale and round to exact integer screen coordinates (no subpixels)
-        var screenX = (int)MathF.Round(logicalX) * Core.PixelScale;
-        var screenY = (int)MathF.Round(logicalY) * Core.PixelScale;
+        var screenX = x * Core.PixelScale;
+        var screenY = y * Core.PixelScale;
         sfmlText.Position = new Vector2f(screenX, screenY);
 
         // Flush any queued pixel batches to ensure correct rendering order
         Core.RenderBatch();
 
-        // Render the text using SFML's renderer without anti-aliasing
-        var shader = !AntiAliasing ? GetThresholdShader() : null;
-        if (shader is not null)
-        {
-            Core.Window.Draw(sfmlText, new RenderStates { Shader = shader });
-        }
-        else
-        {
-            Core.Window.Draw(sfmlText);
-        }
-    }
-
-    /// <summary>
-    /// Gets or Initialises a fragment shader that thresholds font alpha to remove FreeType smoothing/anti-aliasing.
-    /// </summary>
-    private static Shader? GetThresholdShader()
-    {
-        if (_shaderInitialised)
-        {
-            return _thresholdShader;
-        }
-
-        _shaderInitialised = true;
-
-        if (!Shader.IsAvailable)
-        {
-            return null;
-        }
-
-        try
-        {
-            // SFML 3 / GLSL 3.3: explicit in/out varyings; texture() replaces texture2D()
-            const string fragmentShader =
-                "#version 330 core\n" +
-                "uniform sampler2D sourceTexture;\n" +
-                "in vec4 vertexColor;\n" +
-                "in vec2 texCoord;\n" +
-                "out vec4 fragColor;\n" +
-                "void main() {\n" +
-                "    vec4 pixel = texture(sourceTexture, texCoord);\n" +
-                "    if (pixel.a < 0.5) discard;\n" +
-                "    fragColor = vertexColor;\n" +
-                "}";
-
-            _thresholdShader = Shader.FromString(null, null, fragmentShader);
-            _thresholdShader.SetUniform("sourceTexture", Shader.CurrentTexture);
-        }
-        catch (Exception ex)
-        {
-            Logger.LogDebug($"Could not Initialise anti-aliasing threshold shader: {ex.Message}");
-            _thresholdShader = null;
-        }
-
-        return _thresholdShader;
+        // Render the text using SFML's renderer
+        Core.Window.Draw(sfmlText);
     }
 
     /// <summary>

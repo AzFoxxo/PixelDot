@@ -146,7 +146,7 @@ public class Tetris : Application
     {
 
         // Load the palette
-        // Palette.LoadFromFile("/home/az/Downloads/slso8.hex");
+        Palette.LoadFromFile("/home/az/Downloads/slso8.hex");
         Logger.LogInfo("Tetris Initialised");
         CalculateLayout();
         LoadMusic();
